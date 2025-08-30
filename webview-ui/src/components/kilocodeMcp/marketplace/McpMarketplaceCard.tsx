@@ -77,7 +77,7 @@ const McpMarketplaceCard = ({ item, installedServers }: McpMarketplaceCardProps)
 							style={{
 								width: 42,
 								height: 42,
-								borderRadius: 4,
+								borderRadius: "var(--ui-border-radius, 10px)",
 							}}
 						/>
 					)}
@@ -245,7 +245,7 @@ const McpMarketplaceCard = ({ item, installedServers }: McpMarketplaceCardProps)
 							style={{
 								fontSize: "10px",
 								padding: "1px 4px",
-								borderRadius: "3px",
+								borderRadius: "var(--ui-border-radius, 10px)",
 								border: "1px solid color-mix(in srgb, var(--vscode-descriptionForeground) 50%, transparent)",
 								color: "var(--vscode-descriptionForeground)",
 								whiteSpace: "nowrap",
@@ -258,7 +258,7 @@ const McpMarketplaceCard = ({ item, installedServers }: McpMarketplaceCardProps)
 								style={{
 									fontSize: "10px",
 									padding: "1px 4px",
-									borderRadius: "3px",
+									borderRadius: "var(--ui-border-radius, 10px)",
 									border: "1px solid color-mix(in srgb, var(--vscode-descriptionForeground) 50%, transparent)",
 									color: "var(--vscode-descriptionForeground)",
 									whiteSpace: "nowrap",
@@ -291,7 +291,7 @@ const StyledInstallButton = styled.button<{ $isInstalled?: boolean }>`
 	font-size: 12px;
 	font-weight: 500;
 	padding: 2px 6px;
-	border-radius: 2px;
+	border-radius: var(--ui-border-radius, 10px);
 	border: none;
 	cursor: pointer;
 	background: ${(props) =>

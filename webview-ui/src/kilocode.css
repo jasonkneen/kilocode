@@ -2,10 +2,10 @@
 
 /* Slash command highlighting */
 .slash-command-match-textarea-highlight {
-	background-color: color-mix(in srgb, var(--vscode-focusBorder) 30%, transparent);
-	border-radius: 3px;
-	box-shadow: 0 0 0 0.5px color-mix(in srgb, var(--vscode-focusBorder) 30%, transparent);
-	color: transparent;
+	background-color: var(--vscode-focusBorder, #007acc);
+	border-radius: var(--ui-border-radius, 10px);
+	box-shadow: 0 0 0 0.5px var(--vscode-focusBorder, #007acc);
+	color: var(--vscode-editor-foreground, #cccccc);
 }
 
 /* Custom slow pulse animation for task progress squares */
@@ -15,7 +15,7 @@
 		opacity: 1;
 	}
 	50% {
-		opacity: 0.3;
+		opacity: 1;
 	}
 }
 
@@ -31,7 +31,7 @@
 /* Fade-in animation for new task progress squares */
 @keyframes fade-in {
 	0% {
-		opacity: 0;
+		opacity: 1;
 		transform: scale(0.8);
 	}
 	100% {
@@ -47,13 +47,13 @@
 /* Message highlight animation for timeline clicks */
 @keyframes message-highlight {
 	0% {
-		background-color: transparent;
+		background-color: var(--vscode-editor-background, #1e1e1e);
 	}
 	20% {
-		background-color: color-mix(in srgb, var(--vscode-focusBorder) 25%, transparent);
+		background-color: var(--vscode-focusBorder, #007acc);
 	}
 	100% {
-		background-color: transparent;
+		background-color: var(--vscode-editor-background, #1e1e1e);
 	}
 }
 

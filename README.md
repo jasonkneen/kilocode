@@ -6,7 +6,11 @@
   <a href="https://www.reddit.com/r/kilocode/"><img src="https://img.shields.io/reddit/subreddit-subscribers/kilocode?style=flat&logo=reddit&logoColor=white" alt="Reddit"></a>
 </p>
 
-# 🚀 Kilo Code
+# 🚀 Kilo Code UNOFFICIAL CLI BRANCH 
+
+<p>npm install -g kilocode</p>
+<p>npx -y kilocode</p>
+
 
 > Open-source VS Code AI agent. We frequently merge features from open-source projects, such as [Roo Code](https://github.com/RooVetGit/Roo-Code) and [Cline](https://github.com/cline/cline), while building our own vision.
 
@@ -55,6 +59,42 @@ Kilo Code is a direct fork from Roo Code, and also includes the following featur
 - Easy model connection: batteries included.
 - Editing previous messages
 - Assisted commit messages: we write git commit messages for you based on what changed
+
+## CLI Tool
+
+**🚀 Standalone CLI Package Available!**
+
+Kilocode now includes a **production-ready CLI tool** that can be installed independently via npm:
+
+```bash
+# Install globally from npm (coming soon)
+npm install -g @kilocode/cli
+
+# Or build from source
+cd apps/cli
+npm run build
+npm link
+
+# Use anywhere
+kilocode  # Interactive mode
+kilo --provider openai --model gpt-4o
+```
+
+**CLI Features:**
+
+- 🤖 **Multiple AI Providers**: Anthropic, OpenAI, Kilocode, Groq, Gemini, Ollama, LM Studio, and more
+- 💬 **Natural Conversations**: Direct responses for simple queries, tools when needed
+- 🔧 **Comprehensive Toolset**: File operations, command execution, codebase search
+- 💾 **Session Management**: Persistent conversation history with restore functionality
+- 🎨 **Professional UI**: Enhanced banner, real-time streaming, collapsed thinking blocks
+- ⚙️ **MCP Integration**: Model Context Protocol server support
+- 🎯 **Mode System**: Specialized modes for different development tasks
+- 🔄 **State Persistence**: All settings (mode, model, theme) persist between launches
+- 📦 **Standalone Package**: No VS Code dependency required
+
+Perfect for **servers, automation, SSH environments, and power users** who prefer command-line interfaces!
+
+For complete CLI documentation, see [apps/cli/README.md](apps/cli/README.md).
 
 ## Extension Development
 

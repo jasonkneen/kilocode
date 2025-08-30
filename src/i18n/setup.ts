@@ -13,7 +13,7 @@ if (!isTestEnv) {
 		const fs = require("fs")
 		const path = require("path")
 
-		const localesDir = path.join(__dirname, "i18n", "locales")
+		const localesDir = path.join(__dirname, "locales")
 
 		try {
 			// Find all language directories

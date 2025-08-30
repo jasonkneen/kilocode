@@ -33,8 +33,8 @@ export const KiloProfileSelector = ({
 }: KiloProfileSelectorProps) => {
 	const { t } = useAppTranslation()
 
-	// Hide if there is only one profile
-	if ((listApiConfigMeta?.length ?? 0) < 2) {
+	// Hide only if there are no profiles; show even with one for parity
+	if ((listApiConfigMeta?.length ?? 0) < 1) {
 		return null
 	}
 

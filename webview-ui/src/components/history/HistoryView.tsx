@@ -92,7 +92,11 @@ const HistoryView = ({ onDone }: HistoryViewProps) => {
 
 	return (
 		<Tab>
-			<TabHeader className="flex flex-col gap-2">
+			<TabHeader
+				className="flex flex-col gap-2"
+				style={{
+					marginTop: typeof window !== "undefined" && window.location.hostname === "localhost" ? "50px" : "0",
+				}}>
 				<div className="flex justify-between items-center">
 					<h3 className="text-vscode-foreground m-0">{t("history:history")}</h3>
 					<div className="flex gap-2">

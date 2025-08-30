@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState, useMemo } from "react"
 import { useEvent } from "react-use"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { Plus, Server, Package, History, User, Settings, ExternalLink } from "lucide-react"
 
 import { ExtensionMessage } from "@roo/ExtensionMessage"
 import TranslationProvider from "./i18n/TranslationContext"
@@ -16,7 +17,8 @@ import HistoryView from "./components/history/HistoryView"
 import SettingsView, { SettingsViewRef } from "./components/settings/SettingsView"
 import WelcomeView from "./components/kilocode/Welcome/WelcomeView" // kilocode_change
 import ProfileView from "./components/kilocode/profile/ProfileView" // kilocode_change
-import McpView from "./components/mcp/McpView"
+// Use the Kilocode MCP view that embeds the Marketplace tabs
+import McpView from "./components/kilocodeMcp/McpView"
 import { MarketplaceView } from "./components/marketplace/MarketplaceView"
 import ModesView from "./components/modes/ModesView"
 import { HumanRelayDialog } from "./components/human-relay/HumanRelayDialog"
@@ -94,6 +96,7 @@ const App = () => {
 	const marketplaceStateManager = useMemo(() => new MarketplaceViewStateManager(), [])
 
 	const [showAnnouncement, setShowAnnouncement] = useState(false)
+	// Default to chat
 	const [tab, setTab] = useState<Tab>("chat")
 
 	const [humanRelayDialogState, setHumanRelayDialogState] = useState<HumanRelayDialogState>({
@@ -237,7 +240,13 @@ const App = () => {
 	// kilocode_change end
 
 	// Tell the extension that we are ready to receive messages.
-	useEffect(() => vscode.postMessage({ type: "webviewDidLaunch" }), [])
+	useEffect(() => {
+		vscode.postMessage({ type: "webviewDidLaunch" })
+		// Do not alter body margins; we insert an explicit spacer instead
+		if (typeof window !== "undefined" && window.location.hostname === "localhost") {
+			document.body.style.marginTop = "0px"
+		}
+	}, [])
 
 	// Initialize source map support for better error reporting
 	useEffect(() => {
@@ -279,19 +288,167 @@ const App = () => {
 		<WelcomeView />
 	) : (
 		<>
-			{tab === "modes" && <ModesView onDone={() => switchTab("chat")} />}
-			{tab === "mcp" && <McpView onDone={() => switchTab("chat")} />}
-			{tab === "history" && <HistoryView onDone={() => switchTab("chat")} />}
+			{/* Dev server: Add VS Code view/title buttons */}
+			{typeof window !== "undefined" && window.location.hostname === "localhost" && (
+				<div
+					style={{
+						padding: "8px 12px",
+						borderBottom: "1px solid var(--vscode-panel-border)",
+						background: "var(--vscode-sideBar-background)",
+						display: "flex",
+						gap: "8px",
+						justifyContent: "flex-end",
+						position: "fixed",
+						top: 0,
+						left: 0,
+						right: 0,
+						zIndex: 1000,
+					}}>
+					<button
+						onClick={() => {
+							console.log("Switching to chat")
+							setTab("chat")
+						}}
+						title="New Task"
+						style={{
+							padding: "6px",
+							background: tab === "chat" ? "#007acc" : "transparent",
+							border: "1px solid #666",
+							color: "#fff",
+							borderRadius: "3px",
+							display: "flex",
+							alignItems: "center",
+							cursor: "pointer",
+						}}>
+						<Plus size={16} />
+					</button>
+					<button
+						onClick={() => {
+							console.log("Switching to mcp")
+							setTab("mcp")
+						}}
+						title="MCP Servers"
+						style={{
+							padding: "6px",
+							background: tab === "mcp" ? "#007acc" : "transparent",
+							border: "1px solid #666",
+							color: "#fff",
+							borderRadius: "3px",
+							display: "flex",
+							alignItems: "center",
+							cursor: "pointer",
+						}}>
+						<Server size={16} />
+					</button>
+					<button
+						onClick={() => {
+							console.log("Switching to marketplace")
+							setTab("marketplace")
+						}}
+						title="Marketplace"
+						style={{
+							padding: "6px",
+							background: tab === "marketplace" ? "#007acc" : "transparent",
+							border: "1px solid #666",
+							color: "#fff",
+							borderRadius: "3px",
+							display: "flex",
+							alignItems: "center",
+							cursor: "pointer",
+						}}>
+						<Package size={16} />
+					</button>
+					<button
+						onClick={() => {
+							console.log("Switching to history")
+							setTab("history")
+						}}
+						title="History"
+						style={{
+							padding: "6px",
+							background: tab === "history" ? "#007acc" : "transparent",
+							border: "1px solid #666",
+							color: "#fff",
+							borderRadius: "3px",
+							display: "flex",
+							alignItems: "center",
+							cursor: "pointer",
+						}}>
+						<History size={16} />
+					</button>
+					<button
+						onClick={() => {
+							console.log("Switching to profile")
+							setTab("profile")
+						}}
+						title="Profile"
+						style={{
+							padding: "6px",
+							background: tab === "profile" ? "#007acc" : "transparent",
+							border: "1px solid #666",
+							color: "#fff",
+							borderRadius: "3px",
+							display: "flex",
+							alignItems: "center",
+							cursor: "pointer",
+						}}>
+						<User size={16} />
+					</button>
+					<button
+						onClick={() => {
+							console.log("Switching to settings")
+							setTab("settings")
+						}}
+						title="Settings"
+						style={{
+							padding: "6px",
+							background: tab === "settings" ? "#007acc" : "transparent",
+							border: "1px solid #666",
+							color: "#fff",
+							borderRadius: "3px",
+							display: "flex",
+							alignItems: "center",
+							cursor: "pointer",
+						}}>
+						<Settings size={16} />
+					</button>
+					<button
+						onClick={() => window.open(window.location.href, "_blank")}
+						title="Open in New Tab"
+						style={{
+							padding: "6px",
+							background: "transparent",
+							border: "1px solid #666",
+							color: "#fff",
+							borderRadius: "3px",
+							display: "flex",
+							alignItems: "center",
+							cursor: "pointer",
+						}}>
+						<ExternalLink size={16} />
+					</button>
+				</div>
+			)}
+			{typeof window !== "undefined" && window.location.hostname === "localhost" && (
+				// Spacer to avoid the fixed dev toolbar blocking content
+				<div style={{ height: 56 }} />
+			)}
+			{tab === "modes" && <ModesView onDone={() => switchTab("marketplace")} />}
+			{tab === "mcp" && <McpView onDone={() => switchTab("marketplace")} />}
+			{tab === "history" && <HistoryView onDone={() => switchTab("marketplace")} />}
 			{tab === "settings" && (
-				<SettingsView ref={settingsRef} onDone={() => switchTab("chat")} targetSection={currentSection} /> // kilocode_change
+				<SettingsView
+					ref={settingsRef}
+					onDone={() => switchTab("marketplace")}
+					targetSection={currentSection}
+				/>
 			)}
 			{/* kilocode_change: add profileview */}
-			{tab === "profile" && <ProfileView onDone={() => switchTab("chat")} />}
+			{tab === "profile" && <ProfileView onDone={() => switchTab("marketplace")} />}
 			{tab === "marketplace" && (
 				<MarketplaceView
 					stateManager={marketplaceStateManager}
-					onDone={() => switchTab("chat")}
-					// kilocode_change: targetTab="mode"
+					onDone={() => switchTab("marketplace")}
 					targetTab="mode"
 				/>
 			)}

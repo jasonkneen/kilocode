@@ -318,24 +318,24 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 					// Only update to placeholder if the field is currently empty or already a placeholder
 					// This preserves user input when they're actively editing
 					if (!prev.codeIndexOpenAiKey || prev.codeIndexOpenAiKey === SECRET_PLACEHOLDER) {
-						updated.codeIndexOpenAiKey = secretStatus.hasOpenAiKey ? SECRET_PLACEHOLDER : ""
+						updated.codeIndexOpenAiKey = secretStatus?.hasOpenAiKey ? SECRET_PLACEHOLDER : ""
 					}
 					if (!prev.codeIndexQdrantApiKey || prev.codeIndexQdrantApiKey === SECRET_PLACEHOLDER) {
-						updated.codeIndexQdrantApiKey = secretStatus.hasQdrantApiKey ? SECRET_PLACEHOLDER : ""
+						updated.codeIndexQdrantApiKey = secretStatus?.hasQdrantApiKey ? SECRET_PLACEHOLDER : ""
 					}
 					if (
 						!prev.codebaseIndexOpenAiCompatibleApiKey ||
 						prev.codebaseIndexOpenAiCompatibleApiKey === SECRET_PLACEHOLDER
 					) {
-						updated.codebaseIndexOpenAiCompatibleApiKey = secretStatus.hasOpenAiCompatibleApiKey
+						updated.codebaseIndexOpenAiCompatibleApiKey = secretStatus?.hasOpenAiCompatibleApiKey
 							? SECRET_PLACEHOLDER
 							: ""
 					}
 					if (!prev.codebaseIndexGeminiApiKey || prev.codebaseIndexGeminiApiKey === SECRET_PLACEHOLDER) {
-						updated.codebaseIndexGeminiApiKey = secretStatus.hasGeminiApiKey ? SECRET_PLACEHOLDER : ""
+						updated.codebaseIndexGeminiApiKey = secretStatus?.hasGeminiApiKey ? SECRET_PLACEHOLDER : ""
 					}
 					if (!prev.codebaseIndexMistralApiKey || prev.codebaseIndexMistralApiKey === SECRET_PLACEHOLDER) {
-						updated.codebaseIndexMistralApiKey = secretStatus.hasMistralApiKey ? SECRET_PLACEHOLDER : ""
+						updated.codebaseIndexMistralApiKey = secretStatus?.hasMistralApiKey ? SECRET_PLACEHOLDER : ""
 					}
 					if (
 						!prev.codebaseIndexVercelAiGatewayApiKey ||

@@ -1,0 +1,50 @@
+{
+	"name": "@kilocode/electron-app",
+	"version": "1.0.0",
+	"description": "Electron wrapper for Kilo Code webview-ui",
+	"main": "dist/main.js",
+	"private": true,
+	"scripts": {
+		"dev": "npm run build:main && concurrently \"npm run dev:webview\" \"npm run dev:electron\"",
+		"dev:webview": "cd ../../webview-ui && npm run dev",
+		"dev:electron": "electron dist/main.js",
+		"build": "npm run build:main",
+		"build:main": "tsc",
+		"start": "npm run build && electron dist/main.js",
+		"pack": "npm run build && electron-builder --dir",
+		"dist": "npm run build && electron-builder",
+		"clean": "rimraf dist build"
+	},
+	"dependencies": {
+		"electron": "^32.2.0"
+	},
+	"devDependencies": {
+		"@types/node": "^20.19.0",
+		"concurrently": "^9.2.1",
+		"electron-builder": "^25.1.7",
+		"rimraf": "^6.0.1",
+		"typescript": "^5.4.5"
+	},
+	"build": {
+		"appId": "com.kilocode.electron",
+		"productName": "Kilo Code",
+		"directories": {
+			"output": "build"
+		},
+		"files": [
+			"dist/**/*",
+			"webview-ui/**/*"
+		],
+		"mac": {
+			"category": "public.app-category.developer-tools",
+			"icon": "assets/icon.icns"
+		},
+		"win": {
+			"icon": "assets/icon.ico"
+		},
+		"linux": {
+			"icon": "assets/icon.png",
+			"category": "Development"
+		}
+	}
+}

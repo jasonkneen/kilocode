@@ -183,6 +183,7 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setMaxDiagnosticMessages: (value: number) => void
 	includeTaskHistoryInEnhance?: boolean
 	setIncludeTaskHistoryInEnhance: (value: boolean) => void
+	gitBranch?: string
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -304,8 +305,84 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		openRouterImageGenerationSelectedModel: "",
 	})
 
-	const [didHydrateState, setDidHydrateState] = useState(false)
+	const [didHydrateState, setDidHydrateState] = useState(false) // Start false to trigger proper hydration
+
+	// Mock VS Code storage for dev server
+	useEffect(() => {
+		// Load settings from localStorage in dev server
+		if (window.location.hostname === "localhost") {
+			console.log("[DEV] Loading settings from localStorage")
+
+			// Load provider settings or set default
+			const savedProviders = localStorage.getItem("kilocode-apiConfiguration")
+			if (savedProviders) {
+				try {
+					const providers = JSON.parse(savedProviders)
+					// Also hydrate current name + list if available
+					const currentName = localStorage.getItem("kilocode-currentApiConfigName") || "default"
+					let listApiConfigMeta: any[] = []
+					try {
+						const profilesRaw = localStorage.getItem("kilocode-dev-apiProfiles")
+						if (profilesRaw) {
+							const profiles = JSON.parse(profilesRaw)
+							listApiConfigMeta = Object.entries(profiles.apiConfigs || {}).map(([name, cfg]: any) => ({
+								id: cfg?.id || name,
+								name,
+								apiProvider: cfg?.apiProvider || "kilocode",
+							}))
+						}
+					} catch {}
+					setState((prev) => ({
+						...prev,
+						apiConfiguration: providers,
+						currentApiConfigName: currentName,
+						listApiConfigMeta: listApiConfigMeta.length ? listApiConfigMeta : prev.listApiConfigMeta,
+					}))
+				} catch (e) {
+					console.warn("Failed to load provider settings:", e)
+				}
+			} else {
+				// Set complete default configuration for dev server
+				const defaultConfig = {
+					currentApiConfigName: "default",
+					apiConfigs: {
+						default: {
+							id: "default",
+							apiProvider: "kilocode", // Use kilocode as default
+							apiKey: "mock-dev-key",
+							kilocodeToken: "mock-kilo-token",
+							modelId: "claude-3-5-sonnet-20241022",
+							baseURL: "",
+							maxTokens: 8192,
+						},
+					},
+				}
+				setState((prev) => ({
+					...prev,
+					apiConfiguration: {
+						...prev.apiConfiguration,
+						...defaultConfig,
+					},
+					currentApiConfigName: "default",
+					listApiConfigMeta: [{ id: "default", name: "default", apiProvider: "kilocode" }],
+					claudeModel: "claude-3-5-sonnet-20241022",
+					mode: "code",
+				}))
+				localStorage.setItem("kilocode-apiConfiguration", JSON.stringify(defaultConfig))
+				localStorage.setItem("kilocode-currentApiConfigName", "default")
+				console.log("[DEV] Set default configuration profile")
+			}
+
+			// Load other settings
+			const savedModel = localStorage.getItem("selectedModel")
+			if (savedModel) {
+				setState((prev) => ({ ...prev, claudeModel: savedModel.replace(/"/g, "") }))
+			}
+		}
+	}, [])
 	const [showWelcome, setShowWelcome] = useState(false)
+
+	// Do not force chat in dev; allow Marketplace/MCP to be default
 	const [theme, setTheme] = useState<any>(undefined)
 	const [filePaths, setFilePaths] = useState<string[]>([])
 	const [openedTabs, setOpenedTabs] = useState<Array<{ label: string; isActive: boolean; path?: string }>>([])
@@ -472,6 +549,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 
 	useEffect(() => {
 		vscode.postMessage({ type: "webviewDidLaunch" })
+		// Set hydration true after a short delay to ensure state is properly loaded
+		setTimeout(() => setDidHydrateState(true), 200)
 	}, [])
 
 	const contextValue: ExtensionStateContextType = {
@@ -504,6 +583,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		marketplaceItems,
 		marketplaceInstalledMetadata,
 		profileThresholds: state.profileThresholds ?? {},
+		gitBranch: (state as any).gitBranch,
 		alwaysAllowFollowupQuestions,
 		followupAutoApproveTimeoutMs,
 		remoteControlEnabled: state.remoteControlEnabled ?? false,

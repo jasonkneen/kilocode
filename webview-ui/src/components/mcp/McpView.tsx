@@ -493,7 +493,7 @@ const ServerRow = ({ server, alwaysAllowMcp }: { server: McpServer; alwaysAllowM
 											background: "var(--vscode-dropdown-background)",
 											color: "var(--vscode-dropdown-foreground)",
 											border: "1px solid var(--vscode-dropdown-border)",
-											borderRadius: "2px",
+											borderRadius: "var(--ui-border-radius, 10px)",
 											outline: "none",
 											cursor: "pointer",
 										}}>

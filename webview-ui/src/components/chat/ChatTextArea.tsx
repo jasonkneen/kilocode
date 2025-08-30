@@ -24,10 +24,11 @@ import { DropdownOptionType, Button, StandardTooltip } from "@/components/ui" //
 import Thumbnails from "../common/Thumbnails"
 import { ModeSelector } from "./ModeSelector"
 import KiloModeSelector from "../kilocode/KiloModeSelector"
-import { KiloProfileSelector } from "../kilocode/chat/KiloProfileSelector" // kilocode_change
+import { KiloProfileSelector } from "../kilocode/chat/KiloProfileSelector"
 import { MAX_IMAGES_PER_MESSAGE } from "./ChatView"
 import ContextMenu from "./ContextMenu"
 import { ImageWarningBanner } from "./ImageWarningBanner" // kilocode_change
+import { ModelSelector } from "../kilocode/chat/ModelSelector"
 import {
 	VolumeX,
 	Pin,
@@ -101,6 +102,7 @@ export const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			openedTabs,
 			currentApiConfigName,
 			listApiConfigMeta,
+			apiConfiguration,
 			customModes,
 			customModePrompts,
 			cwd,
@@ -1238,25 +1240,25 @@ export const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				className={cn("flex", "justify-between", "items-center", "mt-auto")}>
 				<div className={cn("flex", "items-center", "gap-1", "min-w-0")}>
 					<div className="shrink-0">
-						{/* kilocode_change start: KiloModeSelector instead of ModeSelector */}
 						<KiloModeSelector
 							value={mode}
 							onChange={setMode}
 							modeShortcutText={modeShortcutText}
 							customModes={customModes}
 						/>
-						{/* kilocode_change end */}
 					</div>
-
-					<KiloProfileSelector
-						currentConfigId={currentConfigId}
-						currentApiConfigName={currentApiConfigName}
-						displayName={displayName}
-						listApiConfigMeta={listApiConfigMeta}
-						pinnedApiConfigs={pinnedApiConfigs}
-						togglePinnedApiConfig={togglePinnedApiConfig}
-						selectApiConfigDisabled={selectApiConfigDisabled}
-					/>
+					<div className="min-w-[120px] max-w-[180px]">
+						<KiloProfileSelector
+							currentConfigId={currentConfigId}
+							currentApiConfigName={currentApiConfigName}
+							displayName={displayName}
+							listApiConfigMeta={listApiConfigMeta}
+							pinnedApiConfigs={pinnedApiConfigs}
+							togglePinnedApiConfig={togglePinnedApiConfig}
+							selectApiConfigDisabled={selectApiConfigDisabled}
+						/>
+					</div>
+					{/* Remove duplicate model selector in the top bar; keep the compact one in BottomControls */}
 				</div>
 
 				{/* kilocode_change: hidden on small containerWidth
@@ -1335,7 +1337,7 @@ export const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						"text-vscode-editor-font-size",
 						"leading-vscode-editor-line-height",
 						isFocused
-							? "border border-vscode-focusBorder outline outline-vscode-focusBorder"
+							? "border border-transparent"
 							: isDraggingOver
 								? "border-2 border-dashed border-vscode-focusBorder"
 								: "border border-transparent",
@@ -1392,7 +1394,7 @@ export const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						"cursor-text",
 						isEditMode ? "pt-1.5 pb-10 px-2" : "py-1.5 px-2",
 						isFocused
-							? "border border-vscode-focusBorder outline outline-vscode-focusBorder"
+							? "border border-transparent"
 							: isDraggingOver
 								? "border-2 border-dashed border-vscode-focusBorder"
 								: "border border-transparent",
@@ -1542,17 +1544,22 @@ export const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					"flex",
 					"flex-col",
 					"gap-1",
-					"bg-editor-background",
-					isEditMode ? "px-0" : "px-1.5",
-					"pb-1",
+					isEditMode ? "px-0" : "px-2",
+					"pb-2",
 					"outline-none",
-					"border",
-					"border-none",
 					isEditMode ? "w-full" : "w-[calc(100%-16px)]",
 					"ml-auto",
 					"mr-auto",
 					"box-border",
-				)}>
+					"rounded-[var(--ui-border-radius)]",
+				)}
+				style={{
+					// Lighter panel background for chat input area
+					background: "var(--vscode-input-background)",
+					// Softer outline using input border color
+					boxShadow:
+						"0 0 0 1px var(--vscode-input-border, var(--vscode-panel-border)), 0 4px 16px rgba(0,0,0,0.18)",
+				}}>
 				<div className="relative">
 					<div
 						className={cn("chat-text-area", "relative", "flex", "flex-col", "outline-none")}

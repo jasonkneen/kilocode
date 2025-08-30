@@ -29,7 +29,11 @@ const McpView = () => {
 				display: "flex",
 				flexDirection: "column",
 			}}>
-			<SectionHeader>
+			<SectionHeader
+				style={{
+					marginTop:
+						typeof window !== "undefined" && window.location.hostname === "localhost" ? "-50px" : "0",
+				}}>
 				<div className="flex items-center gap-2">
 					<Server className="w-4" />
 					<div>{t("kilocode:settings.sections.mcp")}</div>
@@ -70,7 +74,9 @@ const McpView = () => {
 	)
 }
 
-const StyledTabButton = styled.button<{ isActive: boolean }>`
+const StyledTabButton = styled.button.withConfig({
+	shouldForwardProp: (prop) => prop !== "isActive",
+})<{ isActive: boolean }>`
 	background: none;
 	border: none;
 	border-bottom: 2px solid ${(props) => (props.isActive ? "var(--vscode-foreground)" : "transparent")};

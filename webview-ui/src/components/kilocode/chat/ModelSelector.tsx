@@ -13,9 +13,15 @@ interface ModelSelectorProps {
 	currentApiConfigName?: string
 	apiConfiguration: ProviderSettings
 	fallbackText: string
+	compact?: boolean
 }
 
-export const ModelSelector = ({ currentApiConfigName, apiConfiguration, fallbackText }: ModelSelectorProps) => {
+export const ModelSelector = ({
+	currentApiConfigName,
+	apiConfiguration,
+	fallbackText,
+	compact = false,
+}: ModelSelectorProps) => {
 	const { t } = useAppTranslation()
 	const { provider, providerModels, providerDefaultModel, isLoading, isError } = useProviderModels(apiConfiguration)
 	const selectedModelId = getSelectedModelId({
@@ -74,6 +80,7 @@ export const ModelSelector = ({ currentApiConfigName, apiConfiguration, fallback
 			contentClassName="max-h-[300px] overflow-y-auto"
 			triggerClassName={cn(
 				"w-full text-ellipsis overflow-hidden p-0",
+				compact ? "text-xs" : "text-sm",
 				"bg-transparent border-transparent hover:bg-transparent hover:border-transparent",
 			)}
 			triggerIcon={false}

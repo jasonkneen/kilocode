@@ -47,12 +47,14 @@ async function fetchKilocodeDefaultModel(
 		if (!defaultModel) {
 			throw new Error(`Default model from ${url} was empty`)
 		}
-		console.info(`Fetched default model from ${url}: ${defaultModel}`)
+		// console.info(`Fetched default model from ${url}: ${defaultModel}`)
 		return defaultModel
 	} catch (err) {
 		console.error("Failed to get default model", err)
-		TelemetryService.instance.captureException(err, { context: "getKilocodeDefaultModel" })
-		return openRouterDefaultModelId
+		try {
+			;(TelemetryService as any)?.instance?.captureException?.(err, { context: "getKilocodeDefaultModel" })
+		} catch {}
+		throw new Error(`Kilocode default model fetch failed: ${err instanceof Error ? err.message : String(err)}`)
 	}
 }
 
@@ -62,7 +64,7 @@ export async function getKilocodeDefaultModel(
 	providerSettings?: ProviderSettings,
 ): Promise<string> {
 	if (!kilocodeToken) {
-		return openRouterDefaultModelId
+		throw new Error("KILOCODE_TOKEN is required to resolve Kilocode default model")
 	}
 	const key = JSON.stringify({
 		kilocodeToken,

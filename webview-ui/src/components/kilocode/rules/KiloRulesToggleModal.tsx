@@ -118,19 +118,21 @@ const KiloRulesToggleModal: React.FC = () => {
 
 			{isVisible && (
 				<div
-					className="fixed left-[15px] right-[15px] border border-[var(--vscode-editorGroup-border)] p-3 rounded z-[1000] overflow-y-auto"
+					className="fixed left-[15px] right-[15px] p-3 z-[1000] overflow-y-auto rounded-[var(--ui-border-radius)]"
 					style={{
 						bottom: `calc(100vh - ${menuPosition}px + 6px)`,
 						background: "var(--vscode-editor-background)",
 						maxHeight: "calc(100vh - 100px)",
 						overscrollBehavior: "contain",
+						boxShadow: "0 0 0 1px var(--vscode-panel-border), 0 8px 24px rgba(0,0,0,0.3)",
 					}}>
 					<div
-						className="fixed w-[10px] h-[10px] z-[-1] rotate-45 border-r border-b border-[var(--vscode-editorGroup-border)]"
+						className="fixed w-[10px] h-[10px] z-[-1] rotate-45 border-r border-b border-[var(--vscode-panel-border)]"
 						style={{
 							bottom: `calc(100vh - ${menuPosition}px)`,
 							right: arrowPosition,
 							background: "var(--vscode-editor-background)",
+							opacity: 0.8,
 						}}
 					/>
 

@@ -102,7 +102,11 @@ export function MarketplaceView({ stateManager, onDone, targetTab, hideHeader = 
 			<Tab className="relative">
 				{/*  kilocode_change: display header conditionally */}
 				<TabHeader
-					style={{ display: hideHeader ? "none" : "flex" }}
+					style={{
+						display: hideHeader ? "none" : "flex",
+						marginTop:
+							typeof window !== "undefined" && window.location.hostname === "localhost" ? "-50px" : "0",
+					}}
 					className="flex flex-col sticky top-0 z-10 px-3 py-2 bg-vscode-sideBar-background">
 					<div className="flex justify-between items-center px-2">
 						<h3 className="font-bold m-0">{t("marketplace:title")}</h3>

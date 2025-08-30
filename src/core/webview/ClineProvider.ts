@@ -1014,12 +1014,17 @@ export class ClineProvider
 
 		const localServerUrl = `localhost:${localPort}`
 
-		// Check if local dev server is running.
+		// Check if Vite dev server is running (and not some other service on that port).
+		// Hitting "/@vite/client" (or the React refresh endpoint) is a stronger signal than root.
 		try {
-			await axios.get(`http://${localServerUrl}`)
-		} catch (error) {
-			vscode.window.showErrorMessage(t("common:errors.hmr_not_running"))
-			return this.getHtmlContent(webview)
+			await axios.get(`http://${localServerUrl}/@vite/client`, { timeout: 1500 })
+		} catch (_err1) {
+			try {
+				await axios.get(`http://${localServerUrl}/@react-refresh`, { timeout: 1500 })
+			} catch (_err2) {
+				vscode.window.showErrorMessage(t("common:errors.hmr_not_running"))
+				return this.getHtmlContent(webview)
+			}
 		}
 
 		const nonce = getNonce()
@@ -1923,11 +1928,23 @@ export class ClineProvider
 		const currentMode = mode ?? defaultModeSlug
 		const hasSystemPromptOverride = await this.hasFileBasedSystemPromptOverride(currentMode)
 
-		// kilocode_change start wrapper information
-		const kiloCodeWrapperProperties = getKiloCodeWrapperProperties()
-		const taskHistory = this.getTaskHistory()
-		this.kiloCodeTaskHistorySizeForTelemetryOnly = taskHistory.length
-		// kilocode_change end
+		// Resolve Kilocode default model with safe fallback in development only
+		let resolvedKilocodeDefaultModel = openRouterDefaultModelId as string
+		try {
+			resolvedKilocodeDefaultModel = await getKilocodeDefaultModel(apiConfiguration.kilocodeToken)
+		} catch (err) {
+			if (this.context.extensionMode === vscode.ExtensionMode.Development) {
+				// Non-fatal in dev: fall back to a sane default without breaking webview
+				this.log(
+					`[defaults] Failed to resolve Kilocode default model, using fallback: ${
+						err instanceof Error ? err.message : String(err)
+					}`,
+				)
+			} else {
+				// In production, rethrow to preserve strict behavior
+				throw err
+			}
+		}
 
 		return {
 			version: this.context.extension?.packageJSON?.version ?? "",
@@ -1950,11 +1967,7 @@ export class ClineProvider
 			autoCondenseContextPercent: autoCondenseContextPercent ?? 100,
 			uriScheme: vscode.env.uriScheme,
 			uiKind: vscode.UIKind[vscode.env.uiKind], // kilocode_change
-			kiloCodeWrapperProperties, // kilocode_change wrapper information
-			kilocodeDefaultModel: await getKilocodeDefaultModel(
-				apiConfiguration.kilocodeToken,
-				apiConfiguration.kilocodeOrganizationId,
-			),
+			kilocodeDefaultModel: await getKilocodeDefaultModel(apiConfiguration.kilocodeToken),
 			currentTaskItem: this.getCurrentTask()?.taskId
 				? (taskHistory || []).find((item: HistoryItem) => item.id === this.getCurrentTask()?.taskId)
 				: undefined,

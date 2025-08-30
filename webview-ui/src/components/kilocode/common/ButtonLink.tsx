@@ -11,7 +11,7 @@ const StyledButtonLink = styled.a`
 	text-decoration: none;
 	font-weight: 600;
 	font-size: 12px;
-	border-radius: 4px;
+	border-radius: var(--ui-border-radius, 10px);
 	padding: 14px;
 	transition: all 0.2s;
 	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);

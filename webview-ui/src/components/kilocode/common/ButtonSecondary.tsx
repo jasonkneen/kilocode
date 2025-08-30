@@ -10,7 +10,7 @@ const StyledButton = styled.button`
 	text-decoration: none;
 	font-weight: 600;
 	font-size: 12px;
-	border-radius: 4px;
+	border-radius: var(--ui-border-radius, 10px);
 	padding: 14px;
 	transition: all 0.2s;
 	cursor: pointer;

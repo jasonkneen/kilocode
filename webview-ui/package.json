@@ -3,7 +3,7 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"lint": "eslint src --ext=ts,tsx --max-warnings=0",
+		"lint": "eslint . --max-warnings=0",
 		"check-types": "tsc",
 		"pretest": "turbo run kilo-code#bundle --cwd ..",
 		"test": "vitest run",
@@ -11,6 +11,7 @@
 		"dev": "vite",
 		"build": "tsc -b && vite build",
 		"build:nightly": "tsc -b && vite build --mode nightly",
+		"build:electron": "tsc -b && vite build --config vite.config.electron.ts",
 		"preview": "vite preview",
 		"clean": "rimraf ../src/webview-ui ../apps/vscode-nightly/build/webview-ui tsconfig.tsbuildinfo .turbo"
 	},

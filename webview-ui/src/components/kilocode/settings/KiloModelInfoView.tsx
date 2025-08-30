@@ -110,7 +110,6 @@ export const KiloModelInfoView = ({
 		<>
 			{model.description && (
 				<ModelDescriptionMarkdown
-					key="description"
 					markdown={model.description}
 					isExpanded={isDescriptionExpanded}
 					setIsExpanded={setIsDescriptionExpanded}

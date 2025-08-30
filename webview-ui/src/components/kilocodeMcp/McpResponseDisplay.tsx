@@ -76,7 +76,7 @@ const ResponseContainer = styled.div`
 	font-size: var(--vscode-editor-font-size, 12px);
 	background-color: ${CODE_BLOCK_BG_COLOR};
 	color: var(--vscode-editor-foreground, #d4d4d4);
-	border-radius: 3px;
+	border-radius: var(--ui-border-radius, 10px);
 	border: 1px solid var(--vscode-editorGroup-border);
 	overflow: hidden;
 

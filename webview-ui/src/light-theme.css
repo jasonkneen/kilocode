@@ -1,0 +1,37 @@
+/* Light (day) theme overrides
+   Targets VS Code’s light class so upstream CSS remains intact.
+   Adjust variables to gain finer control without touching components. */
+
+body.vscode-light {
+	/* Surfaces */
+	--background: #ffffff;
+	--card: #ffffff;
+	--popover: #ffffff;
+
+	/* Text */
+	--foreground: #1f2328; /* GitHub-ish neutral */
+	--muted: #6e7781;
+	--muted-foreground: #59636e;
+
+	/* Emphasis */
+	--primary: #0969da; /* blue-600 */
+	--primary-foreground: #ffffff;
+	--secondary: #e6edf3; /* subtle background */
+	--secondary-foreground: #1f2328;
+	--accent: #ddf4ff; /* light blue tint */
+	--accent-foreground: #053160;
+	--destructive: #d1242f;
+	--destructive-foreground: #ffffff;
+
+	/* UI affordances */
+	--border: #d0d7de;
+	--input: #f6f8fa;
+	--ring: #0969da;
+
+	/* Charts (optional) */
+	--chart-1: #1f6feb;
+	--chart-2: #cf222e;
+	--chart-3: #bf8700;
+	--chart-4: #0a3069;
+	--chart-5: #1a7f37;
+}

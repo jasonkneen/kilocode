@@ -50,7 +50,7 @@ const CodeBlockButton = styled.button`
 	align-items: center;
 	justify-content: center;
 	opacity: 0.4;
-	border-radius: 3px;
+	border-radius: var(--ui-border-radius, 10px);
 	pointer-events: var(--copy-button-events, none);
 	margin-left: 4px;
 	height: 24px;
@@ -78,7 +78,7 @@ const CodeBlockButtonWrapper = styled.div`
 	pointer-events: none;
 	opacity: var(--copy-button-opacity, 0);
 	padding: 4px 6px;
-	border-radius: 3px;
+	border-radius: var(--ui-border-radius, 10px);
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -123,13 +123,13 @@ export const StyledPre = styled.div<{
 	max-height: ${({ windowshade, collapsedHeight }) =>
 		windowshade === "true" ? `${collapsedHeight || WINDOW_SHADE_SETTINGS.collapsedHeight}px` : "none"};
 	overflow-y: auto;
-	padding: 8px 3px;
-	border-radius: 6px;
+	padding: 10px;
+	border-radius: var(--ui-border-radius, 10px);
 	${({ preStyle }) => preStyle && { ...preStyle }}
 
 	pre {
 		background-color: ${CODE_BLOCK_BG_COLOR};
-		border-radius: 5px;
+		border-radius: var(--ui-border-radius, 10px);
 		margin: 0;
 		padding: 10px;
 		width: 100%;
@@ -162,6 +162,52 @@ export const StyledPre = styled.div<{
 	.hljs {
 		color: var(--vscode-editor-foreground, #fff);
 		background-color: ${CODE_BLOCK_BG_COLOR};
+	}
+`
+
+const LanguageSelect = styled.select`
+	font-size: 12px;
+	color: var(--vscode-foreground);
+	opacity: 0.4;
+	font-family: monospace;
+	appearance: none;
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	padding: 4px;
+	margin: 0;
+	vertical-align: middle;
+	height: 24px;
+
+	& option {
+		background: var(--vscode-editor-background);
+		color: var(--vscode-foreground);
+		padding: 0;
+		margin: 0;
+	}
+
+	&::-webkit-scrollbar {
+		width: 6px;
+	}
+
+	&::-webkit-scrollbar-thumb {
+		background: var(--vscode-scrollbarSlider-background);
+	}
+
+	&::-webkit-scrollbar-track {
+		background: var(--vscode-editor-background);
+	}
+
+	&:hover {
+		opacity: 1;
+		background: var(--vscode-toolbar-hoverBackground);
+		border-radius: var(--ui-border-radius, 10px);
+	}
+
+	&:focus {
+		opacity: 1;
+		outline: none;
+		border-radius: var(--ui-border-radius, 10px);
 	}
 `
 

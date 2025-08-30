@@ -35,7 +35,7 @@ export function IconButton({
 
 	const button = (
 		<button
-			className={`${sizeClasses[size]} flex items-center justify-center border-none text-vscode-editor-foreground cursor-pointer rounded-[3px] ${variantClasses[variant]}`}
+			className={`${sizeClasses[size]} flex items-center justify-center border-none text-vscode-editor-foreground cursor-pointer rounded-[var(--ui-border-radius)] ${variantClasses[variant]}`}
 			aria-label={title}
 			onClick={handleClick}
 			onMouseDown={onMouseDown}

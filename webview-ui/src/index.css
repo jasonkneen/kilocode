@@ -19,6 +19,7 @@
 @import "./preflight.css" layer(base);
 @import "tailwindcss/utilities.css" layer(utilities);
 @import "./kilocode.css";
+@import "./light-theme.css";
 @import "katex/dist/katex.min.css";
 
 @plugin "tailwindcss-animate";
@@ -173,7 +174,7 @@
 		--chart-3: var(--vscode-charts-yellow);
 		--chart-4: var(--vscode-charts-orange);
 		--chart-5: var(--vscode-charts-green);
-		--radius: 0.5rem;
+		--radius: 0.75rem;
 	}
 
 	/* Higher specififty than VSCode's theme and root. */
@@ -255,7 +256,7 @@ body:focus-within .code-block-scrollable {
 }
 
 .scrollable::-webkit-scrollbar-corner {
-	background-color: transparent !important;
+	background-color: transparent;
 }
 
 .scrollable::-webkit-scrollbar-thumb {
@@ -263,7 +264,8 @@ body:focus-within .code-block-scrollable {
 	border-color: inherit;
 	border-right-style: inset;
 	border-right-width: calc(100vw + 100vh);
-	border-radius: unset !important;
+	/* Allow rounded thumbs; avoid forcing unset */
+	border-radius: var(--ui-border-radius, 10px);
 }
 
 .scrollable::-webkit-scrollbar-thumb:hover {
@@ -383,19 +385,19 @@ vscode-dropdown::part(listbox) {
 
 .mention-context-textarea-highlight {
 	background-color: color-mix(in srgb, var(--vscode-badge-foreground) 30%, transparent);
-	border-radius: 3px;
+	border-radius: var(--ui-border-radius, 10px);
 	box-shadow: 0 0 0 0.5px color-mix(in srgb, var(--vscode-badge-foreground) 30%, transparent);
 	color: transparent;
 }
 
 .mention-context-highlight {
 	background-color: color-mix(in srgb, var(--vscode-badge-foreground) 30%, transparent);
-	border-radius: 3px;
+	border-radius: var(--ui-border-radius, 10px);
 }
 
 .mention-context-highlight-with-shadow {
 	background-color: color-mix(in srgb, var(--vscode-badge-foreground) 30%, transparent);
-	border-radius: 3px;
+	border-radius: var(--ui-border-radius, 10px);
 	box-shadow: 0 0 0 0.5px color-mix(in srgb, var(--vscode-badge-foreground) 30%, transparent);
 }
 
@@ -425,7 +427,7 @@ input[cmdk-input]:focus {
  */
 
 .custom-markdown > pre {
-	background-color: transparent !important;
+	background-color: transparent;
 }
 
 /*
@@ -493,4 +495,9 @@ input[cmdk-input]:focus {
 	transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
 	transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 	transition-duration: 150ms;
+}
+
+/* Dev server only: Push content below dev toolbar on localhost */
+body[data-hostname="localhost"] {
+	padding-top: 60px !important;
 }

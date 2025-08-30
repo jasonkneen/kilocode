@@ -1,0 +1,45 @@
+{
+	"audit_timestamp": "2024-12-31T12:12:39Z",
+	"repository": {
+		"path": "/Users/jkneen/Documents/GitHub/flows/kilocode",
+		"sha": "7eb88f0152e260b6dc7fa2e3e757bd9ec6affb24",
+		"branch": "main"
+	},
+	"components": {
+		"vscode_extension": {
+			"path": "src/",
+			"package_json": "src/package.json",
+			"entry_point": "src/extension.ts",
+			"build_command": "pnpm bundle",
+			"version": "4.84.1"
+		},
+		"cli": {
+			"path": "apps/cli/",
+			"package_json": "apps/cli/package.json",
+			"entry_point": "apps/cli/src/index.ts",
+			"build_command": "npm run build",
+			"version": "0.1.0"
+		},
+		"shared_core": {
+			"providers": "src/api/providers/",
+			"tools": "src/core/prompts/tools/",
+			"types": "packages/types/",
+			"config": "src/core/config/"
+		},
+		"provider_registry": {
+			"path": "src/api/providers/index.ts",
+			"count": 45,
+			"implementations": "src/api/providers/*.ts"
+		},
+		"tool_registry": {
+			"path": "src/core/prompts/tools/index.ts",
+			"count": 22,
+			"implementations": "src/core/prompts/tools/*.ts"
+		}
+	},
+	"build_system": {
+		"monorepo_manager": "pnpm",
+		"build_tool": "esbuild",
+		"typescript_config": "src/tsconfig.json"
+	}
+}

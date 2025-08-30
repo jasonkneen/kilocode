@@ -2,7 +2,7 @@
 	"name": "kilo-code",
 	"packageManager": "pnpm@10.8.1",
 	"engines": {
-		"node": "20.19.2"
+		"node": "22.19.0"
 	},
 	"scripts": {
 		"preinstall": "node scripts/bootstrap.mjs",
@@ -34,7 +34,12 @@
 		"jetbrains:build": "turbo jetbrains:build",
 		"jetbrains:run": "turbo jetbrains:run",
 		"docs:start": "pnpm --filter kilocode-docs start",
-		"docs:build": "pnpm --filter kilocode-docs build"
+		"docs:build": "pnpm --filter kilocode-docs build",
+		"electron:install": "pnpm --filter @kilocode/electron-app install",
+		"electron:build": "pnpm --filter @kilocode/electron-app build",
+		"electron:start": "node apps/electron-app/launch.js",
+		"electron:dev": "pnpm --filter @kilocode/electron-app dev",
+		"electron:dist": "pnpm --filter @kilocode/electron-app dist"
 	},
 	"devDependencies": {
 		"@changesets/changelog-github": "^0.5.1",

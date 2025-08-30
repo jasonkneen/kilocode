@@ -55,7 +55,7 @@ const SlashCommandMenu: React.FC<SlashCommandMenuProps> = ({
 			onMouseDown={onMouseDown}>
 			<div
 				ref={menuRef}
-				className="bg-[var(--vscode-dropdown-background)] border border-[var(--vscode-editorGroup-border)] rounded-[3px] shadow-[0_4px_10px_rgba(0,0,0,0.25)] flex flex-col max-h-[200px] overflow-y-auto" // Corrected rounded and shadow
+				className="bg-[var(--vscode-dropdown-background)] border border-[var(--vscode-editorGroup-border)] rounded-[var(--ui-border-radius)] shadow-[0_4px_10px_rgba(0,0,0,0.25)] flex flex-col max-h-[200px] overflow-y-auto" // Corrected rounded and shadow
 			>
 				{filteredCommands.length > 0 ? (
 					filteredCommands.map((command, index) => (
