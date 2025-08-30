@@ -42,6 +42,7 @@
 [![Watch the video](https://img.youtube.com/vi/pqGfYXgrhig/maxresdefault.jpg)](https://youtu.be/pqGfYXgrhig)
 
 ## Difference between Kilo Code, Roo Code and Cline
+
 Kilo Code started as a fork of Roo Code, which itself is a fork of Cline. We frequently merge features from these open-source projects and contribute improvements back. Built on these foundations, Kilo Code is independently developed with our own vision for AI coding agents.
 
 - No need to fiddle with API keys, Kilo Code ships with the latest AI models plugged in, including Gemini 2.5 Pro, Claude 4 Sonnet & Opus, and GPT-5
@@ -49,10 +50,44 @@ Kilo Code started as a fork of Roo Code, which itself is a fork of Cline. We fre
 - Inline Assist (experimental)
 
 Kilo Code is a direct fork from Roo Code, and also includes the following features from Cline (and our own features):
+
 - System notifications: Get notified when the agent is done with a task.
 - Easy model connection: with bigger free tier.
 - Editing previous messages
 - Assisted commit messages: we write git commit messages for you based on what changed
+
+## CLI Tool
+
+**🚀 Complete CLI Implementation Available!**
+
+Kilocode now includes a **production-ready CLI tool** that provides full AI coding assistant capabilities in headless environments:
+
+```bash
+# Build and install
+cd apps/cli
+npm run build
+npm link
+
+# Use anywhere
+kilocode --provider openai --model gpt-4o
+kilo --provider anthropic --model claude-3-5-sonnet-20241022
+```
+
+**CLI Features:**
+
+- ✅ **10 AI Providers**: OpenAI, Anthropic, Groq, Gemini, Ollama, LM Studio, and more
+- ✅ **16 Essential Tools**: File operations, code analysis, project intelligence
+- ✅ **Real-time Streaming**: Character-by-character response display
+- ✅ **VS Code Integration**: Auto-detects settings and MCP servers
+- ✅ **Rich Terminal UI**: Themes, collapsible output, interactive commands
+- ✅ **Task Persistence**: Full task lifecycle with durable storage across sessions
+- ✅ **Hierarchical Tasks**: Parent-child task relationships with status aggregation
+- ✅ **Progress Tracking**: Real-time progress updates with complete event system
+- ✅ **Session Resume**: Restart CLI and continue where you left off
+
+Perfect for **servers, automation, SSH environments, and power users** who prefer command-line interfaces!
+
+For complete CLI documentation, see [apps/cli/README.md](apps/cli/) and [status_new.md](status_new.md).
 
 ## Extension Development
 

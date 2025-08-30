@@ -17,6 +17,28 @@ export class RooIgnoreController {
 	private disposables: vscode.Disposable[] = []
 	rooIgnoreContent: string | undefined
 
+	// Default ignore patterns applied even when no .kilocodeignore exists
+	private static readonly DEFAULT_IGNORE_PATTERNS: string[] = [
+		"node_modules",
+		".git",
+		"dist",
+		"out",
+		"build",
+		"build/dependencies",
+		"bundle",
+		"vendor",
+		"tmp",
+		"temp",
+		"__pycache__",
+		"env",
+		"venv",
+		"Pods",
+		"target/dependency",
+		"deps",
+		"pkg",
+		".*",
+	]
+
 	constructor(cwd: string) {
 		this.cwd = cwd
 		this.ignoreInstance = ignore()
@@ -64,6 +86,9 @@ export class RooIgnoreController {
 		try {
 			// Reset ignore instance to prevent duplicate patterns
 			this.ignoreInstance = ignore()
+
+			// Always apply a sensible default ignore set to prevent noisy/huge directories
+			this.ignoreInstance.add(RooIgnoreController.DEFAULT_IGNORE_PATTERNS)
 			const ignorePath = path.join(this.cwd, ".kilocodeignore")
 			if (await fileExistsAtPath(ignorePath)) {
 				const content = await fs.readFile(ignorePath, "utf8")

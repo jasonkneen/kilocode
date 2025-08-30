@@ -2669,6 +2669,50 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 				return
 			}
 			// kilocode_change end
+
+			// Handle oversized payloads (HTTP 413 or equivalent gateway errors)
+			try {
+				const errObj: any = error || {}
+				const status = errObj.status || errObj.code || errObj.error?.status || errObj.response?.status
+				const msg = String(errObj.message || errObj.error?.message || "")
+				const isPayloadTooLarge =
+					String(status) === "413" ||
+					/entity\s*too\s*large|payload\s*too\s*large|request\s*too\s*large/i.test(msg)
+
+				if (isPayloadTooLarge) {
+					// Inform the user and aggressively reduce context before retrying
+					await this.say(
+						"api_req_retry_delayed",
+						"Request payload is too large. Reducing context and retrying...",
+						undefined,
+						true,
+					)
+
+					// Force aggressive truncation/condensation of context
+					await this.handleContextWindowExceededError()
+
+					if (retryAttempt < MAX_CONTEXT_WINDOW_RETRIES) {
+						// Retry after trimming context
+						await this.say(
+							"api_req_retry_delayed",
+							`Retry attempt ${retryAttempt + 1} after reducing context...`,
+							undefined,
+							false,
+						)
+						yield* this.attemptApiRequest(retryAttempt + 1)
+						return
+					}
+
+					// If we've exhausted retries, surface a clearer error
+					await this.say(
+						"error",
+						"Request payload remains too large after multiple reductions. Try limiting file reads (use line_range), lowering maxReadFileLine, or reducing images/context, then retry.",
+					)
+					throw error
+				}
+			} catch {
+				// Non-fatal; fall through to existing handlers
+			}
 			// note that this api_req_failed ask is unique in that we only present this option if the api hasn't streamed any content yet (ie it fails on the first chunk due), as it would allow them to hit a retry button. However if the api failed mid-stream, it could be in any arbitrary state where some tools may have executed, so that error is handled differently and requires cancelling the task entirely.
 			if (autoApprovalEnabled && alwaysApproveResubmit) {
 				let errorMsg

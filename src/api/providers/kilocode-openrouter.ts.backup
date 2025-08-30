@@ -58,27 +58,11 @@ export class KilocodeOpenrouterHandler extends OpenRouterHandler {
 	}
 
 	override getModel() {
-		// kilocode_change start - Fix fallback logic to respect explicit user choices
-		const explicitModel = this.options.kilocodeModel
-		const hasExplicitChoice =
-			explicitModel !== undefined && explicitModel !== null && String(explicitModel).trim().length > 0
-
-		let id = explicitModel ?? this.defaultModel
+		let id = this.options.kilocodeModel ?? this.defaultModel
 		let info = this.models[id]
 		let defaultTemperature = 0
 
-		// If user made an explicit choice but model not found, create a minimal ModelInfo to allow the request
-			if (!info && hasExplicitChoice) {
-				// Create minimal ModelInfo with required properties to prevent JavaScript errors
-				// Spread defaults first to avoid duplicate key declarations
-				info = {
-					...openRouterDefaultModelInfo,
-					description: `User-requested model: ${id}`,
-				}
-			}
-
-		// Only fall back to defaults if no explicit user choice was made
-		if (!info && !hasExplicitChoice) {
+		if (!info) {
 			const defaultInfo = this.models[this.defaultModel]
 			if (defaultInfo) {
 				console.warn(`${id} no longer exists, falling back to ${this.defaultModel}`)
@@ -90,7 +74,6 @@ export class KilocodeOpenrouterHandler extends OpenRouterHandler {
 				info = openRouterDefaultModelInfo
 			}
 		}
-		// kilocode_change end
 
 		// If a specific provider is requested, use the endpoint for that provider.
 		if (this.options.openRouterSpecificProvider && this.endpoints[this.options.openRouterSpecificProvider]) {

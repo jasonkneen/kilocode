@@ -1,0 +1,25 @@
+{
+	"name": "kilocode-cli",
+	"version": "0.1.0",
+	"private": true,
+	"type": "commonjs",
+	"bin": {
+		"kilocode": "bin/kilocode",
+		"kilo": "bin/kilo"
+	},
+	"scripts": {
+		"dev": "tsx src/index.ts",
+		"build": "node scripts/build.mjs",
+		"start": "pnpm build && node dist/cli.cjs",
+		"format": "prettier --write \"src/**/*.{ts,tsx}\""
+	},
+	"dependencies": {
+		"@anthropic-ai/sdk": "*",
+		"openai": "*"
+	},
+	"devDependencies": {
+		"esbuild": "^0.25.0",
+		"tsx": "^4.19.3",
+		"typescript": "^5.4.5"
+	}
+}

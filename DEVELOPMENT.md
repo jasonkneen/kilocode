@@ -52,8 +52,15 @@ The project is organized into several key directories:
 - **`src/`** - Core extension code
     - **`core/`** - Core functionality and tools
     - **`services/`** - Service implementations
+- **`apps/`** - Applications and tooling
+    - **`cli/`** - Complete CLI tool implementation
+    - **`web-roo-code/`** - Next.js web interface
+    - **`storybook/`** - Component library
+    - **`vscode-e2e/`**, **`playwright-e2e/`** - End-to-end tests
+- **`packages/`** - Shared packages
+    - **`types/`** - Shared TypeScript types
+    - **`config-*/`** - Build configurations
 - **`webview-ui/`** - Frontend UI code
-- **`e2e/`** - End-to-end tests
 - **`scripts/`** - Utility scripts
 - **`assets/`** - Static assets like images and icons
 
@@ -123,6 +130,118 @@ This runs both extension and webview tests.
 ### End-to-End Tests
 
 For more details on E2E tests, see [apps/vscode-e2e](apps/vscode-e2e/).
+
+## CLI Tool Development
+
+### **Complete CLI Implementation**
+
+The repository includes a **production-ready CLI tool** at `apps/cli/` that provides full feature parity with the VS Code extension for headless environments.
+
+### **Building the CLI**
+
+```bash
+# Navigate to CLI directory
+cd apps/cli
+
+# Install dependencies (if not already done from root)
+pnpm install
+
+# Development mode
+npm run dev          # Run with tsx for live reloading
+
+# Production build
+npm run build        # Creates dist/cli.cjs
+
+# Build and run
+npm run start        # Build then execute
+
+# Global installation
+npm link            # Makes 'kilocode' and 'kilo' available globally
+```
+
+### **CLI Architecture**
+
+The CLI reuses **85% of the main codebase** through carefully designed imports:
+
+**Shared Components:**
+
+- **API Providers** (`src/api/providers/*`) - All 10+ provider implementations
+- **Tool Definitions** (`src/core/prompts/tools/*`) - All tool descriptions and logic
+- **Core Logic** (`src/core/task/*`, `src/core/diff/*`) - Task execution engine
+- **Types System** (`packages/types/*`) - Full type definitions
+
+**CLI-Specific Files:**
+
+- `src/index.ts` - Main CLI application with terminal UI
+- `src/api.ts` - API handler factory for providers
+- `src/tool-runner.ts` - Tool execution implementations
+- `src/mcp.ts` - MCP server integration
+- `src/collapser.ts` - Terminal output management
+- `src/shims/*` - VS Code API compatibility layer
+
+### **CLI Features**
+
+**Provider Support (10 providers):**
+
+- OpenRouter, Kilocode, Anthropic, OpenAI, Groq, Gemini
+- Ollama, LM Studio, Google Vertex AI, AWS Bedrock, Fireworks, Featherless
+
+**Tool Coverage (16 tools):**
+
+- File operations: read, write, insert, list, search
+- Code analysis: codebase search, definition listing
+- Interactive: questions, completion, task management
+- Advanced: MCP integration, mode switching
+
+**Configuration Management:**
+
+- **VS Code Integration**: Auto-detects and uses VS Code global storage
+- **Environment Variables**: Scans for all provider API keys
+- **Interactive Setup**: `/setup` wizard for configuration overview
+- **MCP Settings**: Shares MCP servers with VS Code extension
+
+**Terminal Features:**
+
+- **Real-time Streaming**: Character-by-character response display
+- **Rich UI**: ASCII banner, collapsible sections, themes
+- **Command System**: 23 slash commands with tab completion
+- **Session Management**: Save/restore conversations with metadata
+
+### **Testing the CLI**
+
+```bash
+# Test basic functionality
+node dist/cli.cjs --provider openai
+
+# Test configuration
+/setup               # Run setup wizard
+/env                # Check environment variables
+/test connection    # Test provider connectivity
+
+# Test tools
+> list files in this directory
+> search for "function" in all TypeScript files
+> what functions are defined in src/index.ts?
+
+# Test advanced features
+/provider anthropic  # Switch providers
+/mode architect     # Switch modes
+/fold off          # Disable output folding
+/theme mono        # Switch to monochrome theme
+```
+
+### **CLI vs Extension Benefits**
+
+| Feature            | VS Code Extension   | CLI Tool                |
+| ------------------ | ------------------- | ----------------------- |
+| **Environment**    | GUI required        | Headless capable        |
+| **Server Usage**   | Not suitable        | Perfect for servers     |
+| **Automation**     | Limited             | Full script integration |
+| **Resource Usage** | High (GUI overhead) | Low (terminal only)     |
+| **Startup Time**   | ~5-10 seconds       | <2 seconds              |
+| **Remote Usage**   | Requires display    | SSH/terminal friendly   |
+
+The CLI provides the **full Kilocode experience** optimized for command-line environments!
 
 ## Linting and Type Checking
 

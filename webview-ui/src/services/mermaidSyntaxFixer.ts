@@ -102,7 +102,8 @@ export class MermaidSyntaxFixer {
 		let llmAttempts = 0
 		let finalError: string | undefined
 
-		while (true) {
+			let keepGoing = true
+			while (keepGoing) {
 			console.info("attempt ", llmAttempts)
 			currentCode = this.applyDeterministicFixes(currentCode)
 
@@ -124,6 +125,7 @@ export class MermaidSyntaxFixer {
 					attempts: this.MAX_FIX_ATTEMPTS,
 					error: lastError,
 				})
+				keepGoing = false
 				break
 			}
 
@@ -132,9 +134,11 @@ export class MermaidSyntaxFixer {
 
 			if ("requestError" in result) {
 				finalError = result.requestError
+				keepGoing = false
 				break
 			} else if (!result.fixedCode) {
 				finalError = i18next.t("common:mermaid.errors.no_fix_provided")
+				keepGoing = false
 				break
 			} else {
 				currentCode = result.fixedCode
