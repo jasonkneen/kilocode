@@ -14,7 +14,18 @@ import { AwsBedrockHandler } from "../../../src/api/providers/bedrock.js"
 import { FireworksHandler } from "../../../src/api/providers/fireworks.js"
 import { FeatherlessHandler } from "../../../src/api/providers/featherless.js"
 
-import type { ProviderSettings, ModelInfo } from "../../../packages/types/src/provider-settings.js"
+// High-priority missing providers
+import { OpenAiNativeHandler } from "../../../src/api/providers/openai-native.js"
+import { MistralHandler } from "../../../src/api/providers/mistral.js"
+import { XAIHandler } from "../../../src/api/providers/xai.js"
+import { CerebrasHandler } from "../../../src/api/providers/cerebras.js"
+import { DeepSeekHandler } from "../../../src/api/providers/deepseek.js"
+import { HuggingFaceHandler } from "../../../src/api/providers/huggingface.js"
+import { NativeOllamaHandler } from "../../../src/api/providers/native-ollama.js"
+import { LiteLLMHandler } from "../../../src/api/providers/lite-llm.js"
+import { SambaNovaHandler } from "../../../src/api/providers/sambanova.js"
+
+import type { ProviderSettings } from "../../../packages/types/src/provider-settings.js"
 
 export interface ApiHandler {
 	createMessage(
@@ -23,7 +34,7 @@ export interface ApiHandler {
 		metadata?: { mode?: string; taskId: string; previousResponseId?: string; suppressPreviousResponseId?: boolean },
 	): ApiStream
 
-	getModel(): { id: string; info: ModelInfo }
+	getModel(): { id: string; info: any }
 }
 
 export function buildCliApiHandler(configuration: ProviderSettings): ApiHandler {
@@ -53,6 +64,25 @@ export function buildCliApiHandler(configuration: ProviderSettings): ApiHandler 
 			return new FireworksHandler(options as any)
 		case "featherless":
 			return new FeatherlessHandler(options as any)
+		// High-priority missing providers
+		case "openai-native":
+			return new OpenAiNativeHandler(options as any)
+		case "mistral":
+			return new MistralHandler(options as any)
+		case "xai":
+			return new XAIHandler(options as any)
+		case "cerebras":
+			return new CerebrasHandler(options as any)
+		case "deepseek":
+			return new DeepSeekHandler(options as any)
+		case "huggingface":
+			return new HuggingFaceHandler(options as any)
+		// case "native-ollama":
+		// 	return new NativeOllamaHandler(options as any)
+		// case "lite-llm":
+		// 	return new LiteLLMHandler(options as any)
+		case "sambanova":
+			return new SambaNovaHandler(options as any)
 		default:
 			return new OpenRouterHandler(options as any)
 	}

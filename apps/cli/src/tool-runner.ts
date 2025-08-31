@@ -20,6 +20,10 @@ import type {
 	SwitchModeToolUse,
 	ListCodeDefinitionNamesToolUse,
 	CodebaseSearchToolUse,
+	SimpleReadFileToolUse,
+	EditFileToolUse,
+	FetchInstructionsToolUse,
+	AccessMcpResourceToolUse,
 } from "../../../src/shared/tools.js"
 import { MultiSearchReplaceDiffStrategy } from "../../../src/core/diff/strategies/multi-search-replace.js"
 import type { ToolUse as GenericToolUse } from "../../../src/shared/tools.js"
@@ -146,6 +150,15 @@ export async function executeTool(cwd: string, tool: ToolUse): Promise<ToolExecu
 			return runUpdateTodoList(cwd, tool as GenericToolUse)
 		case "use_mcp_tool":
 			return runUseMcpTool(cwd, tool as GenericToolUse)
+		// Missing tools from extension
+		case "simple_read_file":
+			return runSimpleReadFile(cwd, tool as SimpleReadFileToolUse)
+		case "edit_file":
+			return runEditFile(cwd, tool as EditFileToolUse)
+		case "fetch_instructions":
+			return runFetchInstructions(cwd, tool as FetchInstructionsToolUse)
+		case "access_mcp_resource":
+			return runAccessMcpResource(cwd, tool as AccessMcpResourceToolUse)
 		default:
 			return { name: tool.name, params: tool.params, output: `Unsupported tool: ${tool.name}` }
 	}
@@ -678,6 +691,212 @@ async function runUpdateTodoList(defaultCwd: string, tool: GenericToolUse): Prom
 			name: tool.name,
 			params: tool.params,
 			output: `Failed to update todo list: ${e?.message || String(e)}`,
+		}
+	}
+}
+
+// Implementation of missing tools from extension
+
+async function runSimpleReadFile(defaultCwd: string, tool: SimpleReadFileToolUse): Promise<ToolExecution> {
+	const p = (tool.params.path || "").trim()
+	if (!p) return { name: tool.name, params: tool.params, output: "Missing path" }
+	const fp = path.resolve(defaultCwd, p)
+
+	if (isPathIgnored(fp, defaultCwd)) {
+		return { name: tool.name, params: tool.params, output: `Access to ${fp} is blocked by ignore rules.` }
+	}
+
+	try {
+		const data = await fs.readFile(fp, "utf8")
+		return { name: tool.name, params: tool.params, output: data }
+	} catch (e: any) {
+		return { name: tool.name, params: tool.params, output: `Failed to read ${fp}: ${e?.message || String(e)}` }
+	}
+}
+
+async function runEditFile(defaultCwd: string, tool: EditFileToolUse): Promise<ToolExecution> {
+	// CLI adaptation: Apply batch edits as diff patches rather than interactive editing
+	const p = (tool.params.path || "").trim()
+	const edits = tool.params.edits || ""
+
+	if (!p) return { name: tool.name, params: tool.params, output: "Missing path" }
+	if (!edits) return { name: tool.name, params: tool.params, output: "Missing edits" }
+
+	const fp = path.resolve(defaultCwd, p)
+
+	try {
+		// Parse edits as JSON array or line-based format
+		let editInstructions: Array<{ line?: number; action: string; content?: string }> = []
+
+		try {
+			// Try parsing as JSON first
+			editInstructions = JSON.parse(edits)
+		} catch {
+			// Fallback: parse as simple line-based edits
+			// Format: "insert:5:content" or "replace:3-7:content" or "delete:10"
+			const lines = edits.split("\n").filter((l) => l.trim())
+			for (const line of lines) {
+				const parts = line.split(":")
+				if (parts.length >= 2) {
+					const action = parts[0]
+					const lineSpec = parts[1]
+					const content = parts.slice(2).join(":")
+
+					if (action === "insert") {
+						editInstructions.push({ action, line: parseInt(lineSpec), content })
+					} else if (action === "replace" || action === "delete") {
+						const lineNum = parseInt(lineSpec.split("-")[0])
+						editInstructions.push({ action, line: lineNum, content })
+					}
+				}
+			}
+		}
+
+		if (editInstructions.length === 0) {
+			return { name: tool.name, params: tool.params, output: "No valid edit instructions found" }
+		}
+
+		const originalContent = await fs.readFile(fp, "utf8")
+		const lines = originalContent.split("\n")
+
+		// Apply edits in reverse order for line number stability
+		const sortedEdits = editInstructions.sort((a, b) => (b.line || 0) - (a.line || 0))
+
+		for (const edit of sortedEdits) {
+			const lineIndex = (edit.line || 1) - 1 // Convert to 0-based
+
+			if (edit.action === "insert") {
+				lines.splice(lineIndex, 0, edit.content || "")
+			} else if (edit.action === "replace") {
+				lines[lineIndex] = edit.content || ""
+			} else if (edit.action === "delete") {
+				lines.splice(lineIndex, 1)
+			}
+		}
+
+		const newContent = lines.join("\n")
+		await fs.writeFile(fp, newContent, "utf8")
+
+		return {
+			name: tool.name,
+			params: tool.params,
+			output: `Applied ${editInstructions.length} edit(s) to ${fp}\n\nCLI Note: For complex edits, consider using 'apply_diff' or 'search_and_replace' tools.`,
+		}
+	} catch (e: any) {
+		return { name: tool.name, params: tool.params, output: `Failed to edit file: ${e?.message || String(e)}` }
+	}
+}
+
+async function runFetchInstructions(defaultCwd: string, tool: FetchInstructionsToolUse): Promise<ToolExecution> {
+	const instructionType = tool.params.instruction_type || ""
+	const context = tool.params.context || ""
+
+	if (!instructionType) return { name: tool.name, params: tool.params, output: "Missing instruction_type" }
+
+	try {
+		// CLI implementation: Look for local instruction files and configurations
+		const instructionSources = [
+			path.join(defaultCwd, `.kilocode/instructions/${instructionType}.md`),
+			path.join(defaultCwd, `.kilocode/instructions/${instructionType}.txt`),
+			path.join(defaultCwd, `instructions/${instructionType}.md`),
+			path.join(defaultCwd, `docs/instructions/${instructionType}.md`),
+			path.join(defaultCwd, `README.md`), // Fallback to README
+		]
+
+		let instructions = ""
+		let foundSource = ""
+
+		for (const sourcePath of instructionSources) {
+			try {
+				if (fssync.existsSync(sourcePath)) {
+					instructions = await fs.readFile(sourcePath, "utf8")
+					foundSource = sourcePath
+					break
+				}
+			} catch {
+				// Continue to next source
+			}
+		}
+
+		if (!instructions) {
+			// Generate basic instructions based on type
+			switch (instructionType) {
+				case "coding":
+					instructions =
+						"Follow best practices for the detected programming language. Use consistent formatting and clear variable names. Add appropriate comments for complex logic."
+					break
+				case "testing":
+					instructions =
+						"Write comprehensive tests covering edge cases. Use descriptive test names. Ensure tests are isolated and deterministic."
+					break
+				case "documentation":
+					instructions =
+						"Write clear, concise documentation. Include examples where helpful. Keep documentation up-to-date with code changes."
+					break
+				default:
+					instructions = `No specific instructions found for type: ${instructionType}. Please provide context-specific guidance.`
+			}
+			foundSource = "generated_default"
+		}
+
+		// Apply context if provided
+		if (context) {
+			instructions += `\n\nContext: ${context}`
+		}
+
+		return {
+			name: tool.name,
+			params: tool.params,
+			output: `Instructions for ${instructionType} (source: ${foundSource}):\n\n${instructions}`,
+		}
+	} catch (e: any) {
+		return {
+			name: tool.name,
+			params: tool.params,
+			output: `Failed to fetch instructions: ${e?.message || String(e)}`,
+		}
+	}
+}
+
+async function runAccessMcpResource(defaultCwd: string, tool: AccessMcpResourceToolUse): Promise<ToolExecution> {
+	try {
+		const uri = tool.params.uri || ""
+		const serverName =
+			(tool.params as any).server || (tool.params as any).mcp_server || tool.params.server_name || ""
+
+		if (!uri) return { name: tool.name, params: tool.params, output: "Missing resource URI" }
+		if (!serverName) return { name: tool.name, params: tool.params, output: "Missing MCP server name" }
+
+		// Resolve MCP settings: global + project
+		const context = createCliExtensionContext()
+		const settingsDir = await ensureSettingsDirectoryExists(context as any)
+		const globalMcpPath = path.join(settingsDir, GlobalFileNames.mcpSettings)
+		const projectMcpPath = resolveProjectMcpPath(defaultCwd)
+		const mcp = await loadMcpSettings(globalMcpPath, projectMcpPath)
+
+		const serverConfig = mcp.mcpServers[serverName]
+		if (!serverConfig) {
+			return {
+				name: tool.name,
+				params: tool.params,
+				output: `No MCP server named "${serverName}" found. Available servers: ${Object.keys(mcp.mcpServers).join(", ")}`,
+			}
+		}
+
+		// For CLI, we'll attempt to access the resource via MCP protocol
+		// This is a simplified implementation - a full implementation would use the MCP client
+		const resourceData = await callMcpTool(serverName, serverConfig, "read_resource", { uri })
+
+		return {
+			name: tool.name,
+			params: tool.params,
+			output: `Resource from ${serverName}:${uri}\n\n${JSON.stringify(resourceData, null, 2)}`,
+		}
+	} catch (e: any) {
+		return {
+			name: tool.name,
+			params: tool.params,
+			output: `Failed to access MCP resource: ${e?.message || String(e)}\n\nNote: Make sure the MCP server is running and the resource URI is valid.`,
 		}
 	}
 }

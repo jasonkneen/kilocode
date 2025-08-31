@@ -72,6 +72,11 @@ export const toolParamNames = [
 	"query",
 	"args",
 	"todos",
+	"instruction_type",
+	"context",
+	"edits",
+	"mcp_server",
+	"server",
 ] as const
 
 export type ToolParamName = (typeof toolParamNames)[number]
@@ -95,9 +100,14 @@ export interface ReadFileToolUse extends ToolUse {
 	params: Partial<Pick<Record<ToolParamName, string>, "args" | "path" | "start_line" | "end_line">>
 }
 
+export interface SimpleReadFileToolUse extends ToolUse {
+	name: "simple_read_file"
+	params: Partial<Pick<Record<ToolParamName, string>, "path">>
+}
+
 export interface FetchInstructionsToolUse extends ToolUse {
 	name: "fetch_instructions"
-	params: Partial<Pick<Record<ToolParamName, string>, "task">>
+	params: Partial<Pick<Record<ToolParamName, string>, "instruction_type" | "context">>
 }
 
 export interface WriteToFileToolUse extends ToolUse {
@@ -179,7 +189,7 @@ export interface SearchAndReplaceToolUse extends ToolUse {
 // kilocode_change start: Morph fast apply
 export interface EditFileToolUse extends ToolUse {
 	name: "edit_file"
-	params: Required<Pick<Record<ToolParamName, string>, "target_file" | "instructions" | "code_edit">>
+	params: Partial<Pick<Record<ToolParamName, string>, "path" | "edits">>
 }
 // kilocode_change end
 
@@ -192,6 +202,7 @@ export type ToolGroupConfig = {
 export const TOOL_DISPLAY_NAMES: Record<ToolName, string> = {
 	execute_command: "run commands",
 	read_file: "read files",
+	simple_read_file: "read files (simple)",
 	fetch_instructions: "fetch instructions",
 	write_to_file: "write files",
 	apply_diff: "apply changes",
@@ -220,6 +231,7 @@ export const TOOL_GROUPS: Record<ToolGroup, ToolGroupConfig> = {
 	read: {
 		tools: [
 			"read_file",
+			"simple_read_file",
 			"fetch_instructions",
 			"search_files",
 			"list_files",
