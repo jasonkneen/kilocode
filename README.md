@@ -8,6 +8,10 @@
 
 # 🚀 Kilo Code UNOFFICIAL CLI BRANCH 
 
+<p>npm install -g kilocode</p>
+<p>npx -y kilocode</p>
+
+
 > Open-source VS Code AI agent. We frequently merge features from open-source projects, such as [Roo Code](https://github.com/RooVetGit/Roo-Code) and [Cline](https://github.com/cline/cline), while building our own vision.
 
 - ✨ Generate code from natural language
