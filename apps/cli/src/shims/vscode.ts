@@ -2,6 +2,10 @@
 // This is not a full implementation; it provides just enough
 // for prompt generation and config access in a CLI context.
 
+import fs from "node:fs"
+import fsPromises from "node:fs/promises"
+import path from "node:path"
+
 type Storage = {
 	get<T = any>(key: string): T | undefined
 	update<T = any>(key: string, value: T | undefined): Promise<void>
@@ -11,9 +15,9 @@ export class FileBackedStorage implements Storage {
 	private filePath: string
 	private cache: Record<string, any> = {}
 	constructor(dir: string, file: string) {
-		this.filePath = require("node:path").join(dir, file)
+		this.filePath = path.join(dir, file)
 		try {
-			const raw = require("node:fs").readFileSync(this.filePath, "utf8")
+			const raw = fs.readFileSync(this.filePath, "utf8")
 			this.cache = JSON.parse(raw)
 		} catch {}
 	}
@@ -23,8 +27,8 @@ export class FileBackedStorage implements Storage {
 	async update<T = any>(key: string, value: T | undefined) {
 		if (typeof value === "undefined") delete this.cache[key]
 		else this.cache[key] = value
-		await require("node:fs/promises").mkdir(require("node:path").dirname(this.filePath), { recursive: true })
-		await require("node:fs/promises").writeFile(this.filePath, JSON.stringify(this.cache, null, 2), "utf8")
+		await fsPromises.mkdir(path.dirname(this.filePath), { recursive: true })
+		await fsPromises.writeFile(this.filePath, JSON.stringify(this.cache, null, 2), "utf8")
 	}
 }
 
@@ -32,9 +36,9 @@ class SecretStorage {
 	private filePath: string
 	private cache: Record<string, string | undefined> = {}
 	constructor(dir: string) {
-		this.filePath = require("node:path").join(dir, "secrets.json")
+		this.filePath = path.join(dir, "secrets.json")
 		try {
-			const raw = require("node:fs").readFileSync(this.filePath, "utf8")
+			const raw = fs.readFileSync(this.filePath, "utf8")
 			this.cache = JSON.parse(raw)
 		} catch {}
 	}
@@ -50,8 +54,8 @@ class SecretStorage {
 		await this.flush()
 	}
 	private async flush() {
-		await require("node:fs/promises").mkdir(require("node:path").dirname(this.filePath), { recursive: true })
-		await require("node:fs/promises").writeFile(this.filePath, JSON.stringify(this.cache, null, 2), "utf8")
+		await fsPromises.mkdir(path.dirname(this.filePath), { recursive: true })
+		await fsPromises.writeFile(this.filePath, JSON.stringify(this.cache, null, 2), "utf8")
 	}
 }
 
@@ -78,6 +82,9 @@ export const window = {
 	showInputBox: async (_opts?: any) => undefined as unknown as string | undefined,
 	showInformationMessage: async (_msg: string) => undefined,
 	showErrorMessage: async (_msg: string) => undefined,
+	createTextEditorDecorationType: (_opts?: any) => ({ dispose: () => {} }),
+	tabGroups: { all: [] },
+	visibleTextEditors: [],
 }
 
 export const workspace = {
@@ -127,7 +134,7 @@ export function detectVsCodeGlobalStorageDir(): string | undefined {
 	}
 	for (const p of candidates) {
 		try {
-			require("node:fs").mkdirSync(p, { recursive: true })
+			fs.mkdirSync(p, { recursive: true })
 			return p
 		} catch {}
 	}

@@ -1,29 +1,29 @@
 import type { Anthropic } from "@anthropic-ai/sdk"
 
-import { ApiStream } from "../../../src/api/transform/stream.js"
-import { OpenRouterHandler } from "../../../src/api/providers/openrouter.js"
-import { OpenAiHandler } from "../../../src/api/providers/openai.js"
-import { AnthropicHandler } from "../../../src/api/providers/anthropic.js"
-import { KilocodeOpenrouterHandler } from "../../../src/api/providers/kilocode-openrouter.js"
-import { GroqHandler } from "../../../src/api/providers/groq.js"
-import { GeminiHandler } from "../../../src/api/providers/gemini.js"
-import { OllamaHandler } from "../../../src/api/providers/ollama.js"
-import { LmStudioHandler } from "../../../src/api/providers/lm-studio.js"
-import { VertexHandler } from "../../../src/api/providers/vertex.js"
-import { AwsBedrockHandler } from "../../../src/api/providers/bedrock.js"
-import { FireworksHandler } from "../../../src/api/providers/fireworks.js"
-import { FeatherlessHandler } from "../../../src/api/providers/featherless.js"
+import { ApiStream } from "../../../src/api/transform/stream"
+import { OpenRouterHandler as SharedOpenRouterHandler } from "../../../src/api/providers/openrouter"
+import OpenAI from "openai"
+import { OpenAiHandler } from "../../../src/api/providers/openai"
+import { AnthropicHandler } from "../../../src/api/providers/anthropic"
+import { KilocodeOpenrouterHandler } from "../../../src/api/providers/kilocode-openrouter"
+// kilocode_change - Activating major providers for Phase 1A
+import { GroqHandler } from "../../../src/api/providers/groq"
+import { GeminiHandler } from "../../../src/api/providers/gemini"
+import { OllamaHandler } from "../../../src/api/providers/ollama"
+import { LmStudioHandler } from "../../../src/api/providers/lm-studio"
+import { VertexHandler } from "../../../src/api/providers/vertex"
+import { AwsBedrockHandler } from "../../../src/api/providers/bedrock"
+import { FireworksHandler } from "../../../src/api/providers/fireworks"
+import { FeatherlessHandler } from "../../../src/api/providers/featherless"
 
-// High-priority missing providers
-import { OpenAiNativeHandler } from "../../../src/api/providers/openai-native.js"
-import { MistralHandler } from "../../../src/api/providers/mistral.js"
-import { XAIHandler } from "../../../src/api/providers/xai.js"
-import { CerebrasHandler } from "../../../src/api/providers/cerebras.js"
-import { DeepSeekHandler } from "../../../src/api/providers/deepseek.js"
-import { HuggingFaceHandler } from "../../../src/api/providers/huggingface.js"
-import { NativeOllamaHandler } from "../../../src/api/providers/native-ollama.js"
-import { LiteLLMHandler } from "../../../src/api/providers/lite-llm.js"
-import { SambaNovaHandler } from "../../../src/api/providers/sambanova.js"
+// Additional providers for comprehensive coverage
+import { OpenAiNativeHandler } from "../../../src/api/providers/openai-native"
+import { MistralHandler } from "../../../src/api/providers/mistral"
+import { XAIHandler } from "../../../src/api/providers/xai"
+import { CerebrasHandler } from "../../../src/api/providers/cerebras"
+import { DeepSeekHandler } from "../../../src/api/providers/deepseek"
+import { HuggingFaceHandler } from "../../../src/api/providers/huggingface"
+import { SambaNovaHandler } from "../../../src/api/providers/sambanova"
 
 import type { ProviderSettings } from "../../../packages/types/src/provider-settings.js"
 
@@ -37,17 +37,85 @@ export interface ApiHandler {
 	getModel(): { id: string; info: any }
 }
 
+// Simplified OpenRouter handler for CLI use
+class SimpleOpenRouterHandler implements ApiHandler {
+	private client: OpenAI
+	private options: any
+
+	constructor(options: any) {
+		this.options = options
+		const baseURL = options.openRouterBaseUrl || "https://openrouter.ai/api/v1"
+		const apiKey = options.openRouterApiKey ?? "not-provided"
+		this.client = new OpenAI({ baseURL, apiKey })
+	}
+
+	async *createMessage(systemPrompt: string, messages: Anthropic.Messages.MessageParam[], metadata?: any): ApiStream {
+		// Convert Anthropic messages to OpenAI format
+		const openAiMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+			{ role: "system", content: systemPrompt },
+			...messages.map((msg) => {
+				if (typeof msg.content === "string") {
+					return { role: msg.role as any, content: msg.content }
+				} else {
+					// Handle content array - for now just extract text
+					const textContent = Array.isArray(msg.content)
+						? msg.content.find((c) => c.type === "text")?.text || ""
+						: ""
+					return { role: msg.role as any, content: textContent }
+				}
+			}),
+		]
+
+		const modelId = this.options.openRouterModelId || "openai/gpt-4o"
+		const stream = await this.client.chat.completions.create({
+			model: modelId,
+			messages: openAiMessages,
+			stream: true,
+			temperature: 0.7,
+			max_tokens: 4000,
+		})
+
+		for await (const chunk of stream) {
+			const delta = chunk.choices[0]?.delta
+			if (delta?.content) {
+				yield { type: "text", text: delta.content }
+			}
+		}
+	}
+
+	getModel() {
+		const modelId = this.options.openRouterModelId || "openai/gpt-4o"
+		return {
+			id: modelId,
+			info: {
+				maxTokens: 4000,
+				contextWindow: 128000,
+				supportsImages: false,
+			},
+		}
+	}
+}
+
+const OpenRouterHandler = SimpleOpenRouterHandler
+
 export function buildCliApiHandler(configuration: ProviderSettings): ApiHandler {
 	const { apiProvider, ...options } = configuration
+
+	// kilocode_change - Add error handling for invalid providers
+	if (!apiProvider) {
+		throw new Error("Provider is required in configuration")
+	}
+
 	switch (apiProvider) {
 		case "openrouter":
-			return new OpenRouterHandler(options as any)
+			return new SharedOpenRouterHandler(options as any)
 		case "openai":
 			return new OpenAiHandler(options as any)
 		case "anthropic":
 			return new AnthropicHandler(options as any)
 		case "kilocode":
 			return new KilocodeOpenrouterHandler(options as any)
+		// kilocode_change - Activated major providers for Phase 1A
 		case "groq":
 			return new GroqHandler(options as any)
 		case "gemini":
@@ -64,7 +132,7 @@ export function buildCliApiHandler(configuration: ProviderSettings): ApiHandler 
 			return new FireworksHandler(options as any)
 		case "featherless":
 			return new FeatherlessHandler(options as any)
-		// High-priority missing providers
+		// Additional providers for comprehensive coverage
 		case "openai-native":
 			return new OpenAiNativeHandler(options as any)
 		case "mistral":
@@ -77,13 +145,9 @@ export function buildCliApiHandler(configuration: ProviderSettings): ApiHandler 
 			return new DeepSeekHandler(options as any)
 		case "huggingface":
 			return new HuggingFaceHandler(options as any)
-		// case "native-ollama":
-		// 	return new NativeOllamaHandler(options as any)
-		// case "lite-llm":
-		// 	return new LiteLLMHandler(options as any)
 		case "sambanova":
 			return new SambaNovaHandler(options as any)
 		default:
-			return new OpenRouterHandler(options as any)
+			throw new Error(`Unsupported provider: ${apiProvider}. Please check your configuration.`)
 	}
 }

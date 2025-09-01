@@ -5,6 +5,9 @@
  * Provides migration utilities and adapters for seamless integration.
  */
 
+import fs from "node:fs/promises"
+import fssync from "node:fs"
+import path from "node:path"
 import { Task, TaskOptions } from "../../../src/core/task/Task"
 import { TaskStatus } from "../../../src/core/task/TaskStatus"
 import { eventBus } from "../../../src/core/events"
@@ -109,7 +112,7 @@ export class CliTask extends Task {
 				updatedAt: new Date().toISOString(),
 			},
 			messages: this._conversationHistory,
-			todos: this.todoList?.map((todo) => todo.text) || [],
+			todos: this.todoList?.map((todo) => todo.content) || [],
 		}
 	}
 
@@ -158,9 +161,8 @@ export class CliMigration {
 			initialTodos:
 				session.todos?.map((text) => ({
 					id: `todo_${Date.now()}_${Math.random()}`,
-					text,
-					completed: false,
-					createdAt: Date.now(),
+					content: text,
+					status: "pending" as const,
 				})) || [],
 		}
 
@@ -225,9 +227,6 @@ export class CliMigration {
 		sessionFiles: string[]
 		todoFile: string | null
 	}> {
-		const fs = require("fs")
-		const path = require("path")
-
 		const sessionsDir = path.join(stateDir, "sessions")
 		const todosFile = path.join(stateDir, "todos.json")
 
@@ -235,15 +234,15 @@ export class CliMigration {
 		let needsSessionMigration = false
 
 		try {
-			if (fs.existsSync(sessionsDir)) {
-				sessionFiles = (await fs.promises.readdir(sessionsDir)).filter((f: string) => f.endsWith(".json"))
+			if (fssync.existsSync(sessionsDir)) {
+				sessionFiles = (await fs.readdir(sessionsDir)).filter((f: string) => f.endsWith(".json"))
 				needsSessionMigration = sessionFiles.length > 0
 			}
 		} catch {
 			// Directory doesn't exist or can't be read
 		}
 
-		const needsTodoMigration = fs.existsSync(todosFile)
+		const needsTodoMigration = fssync.existsSync(todosFile)
 
 		return {
 			needsSessionMigration,
@@ -271,8 +270,8 @@ export class CliMigration {
 		if (migrationInfo.needsSessionMigration) {
 			for (const sessionFile of migrationInfo.sessionFiles) {
 				try {
-					const sessionPath = require("path").join(stateDir, "sessions", sessionFile)
-					const sessionData = JSON.parse(require("fs").readFileSync(sessionPath, "utf8"))
+					const sessionPath = path.join(stateDir, "sessions", sessionFile)
+					const sessionData = JSON.parse(fssync.readFileSync(sessionPath, "utf8"))
 					const sessionId = sessionFile.replace(".json", "")
 
 					const task = this.fromLegacySession(sessionId, sessionData, provider)
@@ -286,7 +285,7 @@ export class CliMigration {
 		// Migrate todos
 		if (migrationInfo.needsTodoMigration && migrationInfo.todoFile) {
 			try {
-				const todosData = JSON.parse(require("fs").readFileSync(migrationInfo.todoFile, "utf8"))
+				const todosData = JSON.parse(fssync.readFileSync(migrationInfo.todoFile, "utf8"))
 				if (Array.isArray(todosData)) {
 					const todoTasks = this.todosToTasks(todosData, provider)
 					migratedTasks.push(...todoTasks)

@@ -6,11 +6,8 @@ export const ANIMATION_DELAY_MS = 150
 export class CliThinkingAnimation {
 	private animationInterval: NodeJS.Timeout | null = null
 	private animationState = 0
-	private isTypingPhase = true
-	private readonly animationFrames = ["█", "K█", "KI█", "KIL█", "KILO█"]
-	private isBlockVisible = true
+	private readonly spinnerFrames = ["⠦", "⠧", "⠇", "⠏", "⠋", "⠙", "⠸", "⠼"]
 	private isActive = false
-	private currentLine = ""
 	private color: any
 
 	constructor(color: any) {
@@ -21,21 +18,19 @@ export class CliThinkingAnimation {
 		if (this.isActive) return
 		this.isActive = true
 		this.animationState = 0
-		this.isTypingPhase = true
-		this.isBlockVisible = true
 
 		// Show initial thinking indicator
-		process.stdout.write(`\n${this.color.magenta}💭 Thinking${this.color.reset} `)
+		process.stdout.write(`\nThinking `)
 
 		// Start animation
 		this.animationInterval = setInterval(() => {
 			this.updateAnimation()
-		}, 100)
+		}, 150)
 	}
 
 	public startWorking(): void {
 		this.stopAnimation()
-		process.stdout.write(`${this.color.yellow}⚙︎ Working${this.color.reset}`)
+		process.stdout.write(`Working`)
 	}
 
 	public hide(): void {
@@ -63,53 +58,18 @@ export class CliThinkingAnimation {
 	private updateAnimation(): void {
 		if (!this.isActive) return
 
-		// Animation with two phases like VS Code extension:
-		// 1. Typing out "KILO" (block moves to the right) - faster (100ms)
-		// 2. Blinking block at the end when fully spelled - slower (200ms)
-		if (this.animationState < this.animationFrames.length - 1) {
-			// Phase 1: Spell out "KILO" with block cursor
-			this.animationState++
-		} else {
-			// Check if we just reached the end of typing phase
-			if (this.isTypingPhase) {
-				// Transition from typing to blinking phase
-				this.isTypingPhase = false
-
-				// Clear current interval and create a new one with slower timing (200ms)
-				if (this.animationInterval) {
-					clearInterval(this.animationInterval)
-				}
-
-				this.animationInterval = setInterval(() => {
-					this.updateAnimation()
-				}, 200)
-			}
-
-			// Phase 2: Blink the block cursor at the end
-			this.isBlockVisible = !this.isBlockVisible
-		}
-
+		// Simple spinner animation: cycle through frames
+		this.animationState = (this.animationState + 1) % this.spinnerFrames.length
 		this.updateDisplay()
 	}
 
 	private updateDisplay(): void {
-		let text: string
-
-		// When fully spelled and in blinking mode
-		if (this.animationState === this.animationFrames.length - 1) {
-			// Show either the full frame with block, or just "KILO" without block
-			text = this.isBlockVisible ? this.animationFrames[this.animationState] : "KILO"
-		} else {
-			// Normal animation frames (with block)
-			text = this.animationFrames[this.animationState]
-		}
+		const spinnerChar = this.spinnerFrames[this.animationState]
 
 		// Update the display
 		readline.clearLine(process.stdout, 0)
 		readline.cursorTo(process.stdout, 0)
-		process.stdout.write(
-			`${this.color.magenta}💭 Thinking${this.color.reset} ${this.color.dim}${text}${this.color.reset}`,
-		)
+		process.stdout.write(`Thinking ${spinnerChar}`)
 	}
 
 	public isAnimating(): boolean {

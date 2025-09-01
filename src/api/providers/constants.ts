@@ -1,4 +1,4 @@
-import { Package } from "../../shared/package"
+import { Package } from "../../shared/package.ts"
 
 export const DEFAULT_HEADERS = {
 	"HTTP-Referer": "https://kilocode.ai",

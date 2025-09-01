@@ -2,12 +2,12 @@ import * as path from "path"
 import fs from "fs/promises"
 
 import NodeCache from "node-cache"
-import { safeWriteJson } from "../../../utils/safeWriteJson"
+import { safeWriteJson } from "../../../utils/safeWriteJson.ts"
 
-import { ContextProxy } from "../../../core/config/ContextProxy"
-import { getCacheDirectoryPath } from "../../../utils/storage"
-import { RouterName, ModelRecord, cerebrasModels } from "../../../shared/api"
-import { fileExistsAtPath } from "../../../utils/fs"
+import { ContextProxy } from "../../../core/config/ContextProxy.ts"
+import { getCacheDirectoryPath } from "../../../utils/storage.ts"
+import { RouterName, ModelRecord, cerebrasModels } from "../../../shared/api.ts"
+import { fileExistsAtPath } from "../../../utils/fs.ts"
 
 import { getOpenRouterModels } from "./openrouter"
 import { getRequestyModels } from "./requesty"

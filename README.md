@@ -58,36 +58,39 @@ Kilo Code is a direct fork from Roo Code, and also includes the following featur
 
 ## CLI Tool
 
-**🚀 Complete CLI Implementation Available!**
+**🚀 Standalone CLI Package Available!**
 
-Kilocode now includes a **production-ready CLI tool** that provides full AI coding assistant capabilities in headless environments:
+Kilocode now includes a **production-ready CLI tool** that can be installed independently via npm:
 
 ```bash
-# Build and install
+# Install globally from npm (coming soon)
+npm install -g @kilocode/cli
+
+# Or build from source
 cd apps/cli
 npm run build
 npm link
 
 # Use anywhere
-kilocode --provider openai --model gpt-4o
-kilo --provider anthropic --model claude-3-5-sonnet-20241022
+kilocode  # Interactive mode
+kilo --provider openai --model gpt-4o
 ```
 
 **CLI Features:**
 
-- ✅ **10 AI Providers**: OpenAI, Anthropic, Groq, Gemini, Ollama, LM Studio, and more
-- ✅ **16 Essential Tools**: File operations, code analysis, project intelligence
-- ✅ **Real-time Streaming**: Character-by-character response display
-- ✅ **VS Code Integration**: Auto-detects settings and MCP servers
-- ✅ **Rich Terminal UI**: Themes, collapsible output, interactive commands
-- ✅ **Task Persistence**: Full task lifecycle with durable storage across sessions
-- ✅ **Hierarchical Tasks**: Parent-child task relationships with status aggregation
-- ✅ **Progress Tracking**: Real-time progress updates with complete event system
-- ✅ **Session Resume**: Restart CLI and continue where you left off
+- 🤖 **Multiple AI Providers**: Anthropic, OpenAI, Kilocode, Groq, Gemini, Ollama, LM Studio, and more
+- 💬 **Natural Conversations**: Direct responses for simple queries, tools when needed
+- 🔧 **Comprehensive Toolset**: File operations, command execution, codebase search
+- 💾 **Session Management**: Persistent conversation history with restore functionality
+- 🎨 **Professional UI**: Enhanced banner, real-time streaming, collapsed thinking blocks
+- ⚙️ **MCP Integration**: Model Context Protocol server support
+- 🎯 **Mode System**: Specialized modes for different development tasks
+- 🔄 **State Persistence**: All settings (mode, model, theme) persist between launches
+- 📦 **Standalone Package**: No VS Code dependency required
 
 Perfect for **servers, automation, SSH environments, and power users** who prefer command-line interfaces!
 
-For complete CLI documentation, see [apps/cli/README.md](apps/cli/) and [status_new.md](status_new.md).
+For complete CLI documentation, see [apps/cli/README.md](apps/cli/README.md).
 
 ## Extension Development
 

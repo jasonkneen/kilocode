@@ -42,7 +42,12 @@ const result = await build({
     {
       name: 'mcp-externals',
       setup(build) {
-        build.onResolve({ filter: /^@modelcontextprotocol\/sdk\/client\/streamableHttp\.js$/ }, () => ({ external: true }))
+        // Make MCP SDK modules external to avoid bundling issues
+        build.onResolve({ filter: /^@modelcontextprotocol\/sdk\/client\/.*\.js$/ }, () => ({ external: true }))
+        build.onResolve({ filter: /^@modelcontextprotocol\/sdk\/types\.js$/ }, () => ({ external: true }))
+        build.onResolve({ filter: /^ignore$/ }, () => ({ external: true }))
+        // Externalize tiktoken to avoid WASM bundling issues
+        build.onResolve({ filter: /^tiktoken$/ }, () => ({ external: true }))
       }
     },
     {

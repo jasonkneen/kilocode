@@ -25,6 +25,9 @@ import { getSwitchModeDescription } from "./switch-mode"
 import { getNewTaskDescription } from "./new-task"
 import { getCodebaseSearchDescription } from "./codebase-search"
 import { getUpdateTodoListDescription } from "./update-todo-list"
+import { getNewRuleDescription } from "./new-rule"
+import { getReportBugDescription } from "./report-bug"
+import { getCondenseDescription } from "./condense"
 import { CodeIndexManager } from "../../../services/code-index/manager"
 import { isMorphAvailable } from "../../tools/editFileTool"
 
@@ -63,6 +66,9 @@ const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined>
 	apply_diff: (args) =>
 		args.diffStrategy ? args.diffStrategy.getToolDescription({ cwd: args.cwd, toolOptions: args.toolOptions }) : "",
 	update_todo_list: (args) => getUpdateTodoListDescription(args),
+	new_rule: () => getNewRuleDescription(),
+	report_bug: () => getReportBugDescription(),
+	condense: () => getCondenseDescription(),
 }
 
 export function getToolDescriptionsForMode(

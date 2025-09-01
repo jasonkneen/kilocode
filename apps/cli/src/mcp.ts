@@ -5,12 +5,19 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js"
 // Older SDKs ship only stdio/sse; guard import for streamable-http by dynamic fallback
-let StreamableHTTPClientTransport: any
-try {
-	// eslint-disable-next-line @typescript-eslint/no-var-requires
-	StreamableHTTPClientTransport =
-		require("@modelcontextprotocol/sdk/client/streamableHttp.js").StreamableHTTPClientTransport
-} catch {}
+let StreamableHTTPClientTransport: any = null
+
+async function getStreamableHTTPClientTransport() {
+	if (StreamableHTTPClientTransport === null) {
+		try {
+			const module = await import("@modelcontextprotocol/sdk/client/streamableHttp.js")
+			StreamableHTTPClientTransport = module.StreamableHTTPClientTransport
+		} catch {
+			StreamableHTTPClientTransport = undefined // Mark as unavailable
+		}
+	}
+	return StreamableHTTPClientTransport
+}
 import type { CallToolRequestSchema } from "@modelcontextprotocol/sdk/types.js"
 
 export type McpServerConfig = {
@@ -79,7 +86,7 @@ export async function saveProjectMcp(cwd: string, settings: McpSettings): Promis
 export async function callMcpTool(serverName: string, cfg: McpServerConfig, toolName: string, args: any): Promise<any> {
 	if (cfg.disabled) throw new Error(`Server ${serverName} is disabled`)
 	const client = new Client({ name: "Kilo Code CLI", version: "0.1.0" }, { capabilities: {} })
-	let transport: StdioClientTransport | SSEClientTransport | StreamableHTTPClientTransport
+	let transport: StdioClientTransport | SSEClientTransport | any
 	const type = cfg.type || (cfg.command ? "stdio" : "sse")
 	if (type === "stdio") {
 		const command =
@@ -93,14 +100,16 @@ export async function callMcpTool(serverName: string, cfg: McpServerConfig, tool
 		transport = new StdioClientTransport({ command, args, cwd: cfg.cwd, env: cfg.env })
 	} else if (type === "sse") {
 		if (!cfg.url) throw new Error("sse server requires url")
-		transport = new SSEClientTransport({ url: cfg.url, headers: cfg.headers })
+		transport = new SSEClientTransport(new URL(cfg.url), cfg.headers || {})
 	} else {
 		if (!cfg.url) throw new Error("streamable-http server requires url")
-		transport = new StreamableHTTPClientTransport({ url: cfg.url, headers: cfg.headers })
+		const StreamableHTTPTransport = await getStreamableHTTPClientTransport()
+		if (!StreamableHTTPTransport) throw new Error("streamable-http transport not available")
+		transport = new StreamableHTTPTransport({ url: cfg.url, headers: cfg.headers })
 	}
 	await client.connect(transport)
 	try {
-		const res = await client.tools.call({ name: toolName, arguments: args } as any)
+		const res = await client.callTool({ name: toolName, arguments: args } as any)
 		return res
 	} finally {
 		await client.close()

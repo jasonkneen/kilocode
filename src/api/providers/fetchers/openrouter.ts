@@ -10,9 +10,9 @@ import {
 	anthropicModels,
 } from "@roo-code/types"
 
-import type { ApiHandlerOptions } from "../../../shared/api"
-import { parseApiPrice } from "../../../shared/cost"
-import { DEFAULT_HEADERS } from "../constants" // kilocode_change
+import type { ApiHandlerOptions } from "../../../shared/api.ts"
+import { parseApiPrice } from "../../../shared/cost.ts"
+import { DEFAULT_HEADERS } from "../constants.ts" // kilocode_change
 
 /**
  * OpenRouterBaseModel

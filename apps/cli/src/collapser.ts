@@ -25,6 +25,18 @@ export class Collapser {
 		return id
 	}
 
+	// Update the most recent collapsed entry with new content (horizontal updates only)
+	updateLast(newPreview: string, newFull: string): void {
+		if (this.entries.length === 0) return
+		const lastEntry = this.entries[this.entries.length - 1]
+		if (!lastEntry.expanded) {
+			lastEntry.preview = newPreview
+			lastEntry.full = newFull
+			// Just update the internal content - avoid vertical cursor manipulation
+			// The preview was already shown and will be available for expansion
+		}
+	}
+
 	// Expand the most recent collapsed entry
 	expandLast(): void {
 		for (let i = this.entries.length - 1; i >= 0; i--) {

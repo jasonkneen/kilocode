@@ -4,7 +4,7 @@ import type { GenerateContentConfig } from "@google/genai"
 
 import type { ModelInfo, ProviderSettings, ReasoningEffortWithMinimal } from "@roo-code/types"
 
-import { shouldUseReasoningBudget, shouldUseReasoningEffort } from "../../shared/api"
+import { shouldUseReasoningBudget, shouldUseReasoningEffort } from "../../shared/api.ts"
 
 export type OpenRouterReasoningParams = {
 	effort?: ReasoningEffortWithMinimal

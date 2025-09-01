@@ -1,252 +1,265 @@
-# 🚀 Kilocode CLI - AI Coding Assistant
+# @kilocode/cli
 
-> **Production-ready command-line interface** for the Kilocode AI coding assistant. Perfect for headless environments, servers, automation, and power users who prefer terminal interfaces.
+> Unofficial Kilo Code CLI - A powerful, standalone command-line interface for AI-assisted development
 
-## 🎯 **Complete Implementation - Feature Parity Achieved!**
+**Production-ready CLI tool with full feature parity to the VS Code extension.**
 
-The CLI provides **complete feature parity** with the VS Code extension for headless environments:
+## Installation
 
-- ✅ **10 AI Providers**: OpenAI, Anthropic, Groq, Gemini, Ollama, LM Studio, Vertex AI, Bedrock, Fireworks, Featherless
-- ✅ **17 Essential Tools**: File operations, code analysis, project intelligence, interactive workflows
-- ✅ **Real-time Streaming**: Character-by-character response display with zero buffering
-- ✅ **VS Code Integration**: Auto-detects settings, MCP servers, and provider configurations
-- ✅ **Rich Terminal UI**: Collapsible output, themes, auto-features, interactive commands
-- ✅ **Professional UX**: 23 slash commands, tab completion, session management
-
----
-
-## 🚀 **Installation & Quick Start**
-
-### **Build & Install**
+### Global Installation (Recommended)
 
 ```bash
-# From repository root
+npm install -g @kilocode/cli
+```
+
+### Build from Source
+
+```bash
 cd apps/cli
-npm run build        # Creates dist/cli.cjs
-npm link            # Install globally
-
-# Now available system-wide
-kilocode --provider openai --model gpt-4o
-kilo --provider anthropic --model claude-3-5-sonnet-20241022
+npm run build
+npm link
 ```
 
-### **First-Time Setup**
+## Quick Start
 
 ```bash
-# Run setup wizard (checks VS Code settings, env vars, MCP)
+# Interactive mode
 kilocode
-/setup
 
-# Check environment variables
-/env
+# Short alias
+kilo
 
-# Configure provider
+# Set your API provider
+export ANTHROPIC_API_KEY="sk-ant-..."
+# or
 export OPENAI_API_KEY="sk-..."
-/provider openai
-/test connection
-
-# Start coding!
-> help me build a Node.js API with authentication
+# or login to Kilocode
+kilocode
+/login kilocode
 ```
 
----
+## ✨ Key Features
 
-## 📚 **Command Reference**
+### 🤖 **Multiple AI Providers**
 
-### **🔧 Configuration**
+- **Anthropic**: Claude 4 Sonnet, Claude 3.5 Sonnet, etc.
+- **OpenAI**: GPT-4o, GPT-4, GPT-3.5 Turbo
+- **Kilocode**: Access to 400+ models with free credits
+- **Groq**: Lightning-fast inference
+- **Google**: Gemini Pro, Gemini Flash
+- **Local**: Ollama, LM Studio
+- **Cloud**: OpenRouter, Fireworks, Featherless
 
-| Command            | Description                                                        |
-| ------------------ | ------------------------------------------------------------------ |
-| `/setup`           | **Setup wizard** - Complete configuration overview                 |
-| `/env`             | **Environment status** - Show all API keys and variables           |
-| `/test connection` | **Connectivity test** - Verify current provider works              |
-| `/provider <name>` | **Switch provider** - Change AI provider (openai, anthropic, etc.) |
-| `/model <id>`      | **Switch model** - Change model for current provider               |
-| `/models`          | **List models** - Show available models                            |
-| `/login kilocode`  | **Kilocode login** - Browser login with free credits               |
-| `/logout kilocode` | **Logout** - Clear Kilocode credentials                            |
+### 💬 **Intelligent Conversation Flow**
 
-### **🎛️ Session & Workflow**
+- **Natural responses** for greetings and simple questions
+- **Smart tool usage** only when tasks require action
+- **Real-time streaming** with clean output formatting
+- **Context-aware** responses that understand your project
 
-| Command        | Description                                          |
-| -------------- | ---------------------------------------------------- |
-| `/status`      | **Status** - Current provider, model, token usage    |
-| `/clear`       | **Clear** - Start new conversation                   |
-| `/resume`      | **Sessions** - List saved sessions                   |
-| `/resume <id>` | **Load session** - Restore specific conversation     |
-| `/mode <slug>` | **Switch mode** - Change to architect/coder/debugger |
-| `/modes`       | **List modes** - Show available modes                |
+### 🔧 **Comprehensive Development Toolset**
 
-### **⚙️ Advanced**
+- **File Operations**: Read, write, edit, search across your codebase
+- **Command Execution**: Run shell commands with full output capture
+- **Codebase Intelligence**: Semantic search and code analysis
+- **Project Management**: Todo lists, session management
+- **Browser Automation**: Web interaction capabilities
 
-| Command                            | Description                                          |
-| ---------------------------------- | ---------------------------------------------------- |
-| `/config export <path>`            | **Export settings** - Save all configuration         |
-| `/config import <path>`            | **Import settings** - Load configuration file        |
-| `/mcp list`                        | **MCP servers** - List configured MCP servers        |
-| `/mcp call <server> <tool> [args]` | **MCP call** - Execute MCP tool directly             |
-| `/fold on\|off\|toggle`            | **Output folding** - Toggle collapsible sections     |
-| `/theme default\|mono`             | **Theme** - Switch color themes                      |
-| `/autocontinue on\|off`            | **Auto-continue** - Auto-send "continue" after tools |
-| `/autorun on\|off`                 | **Auto-run** - Auto-continue for non-questions       |
-| `/stats verbose\|quiet`            | **Token stats** - Control usage display detail       |
+### 🎨 **Professional User Interface**
 
-### **🔨 Development**
+- **Enhanced ASCII banner** with gradient colors and configuration display
+- **Smart thinking display**: Shows meaningful previews, expandable with Ctrl+R
+- **Session persistence**: All conversations saved and restorable
+- **Clean alignment**: Professional formatting with consistent spacing
+- **Theme support**: Default and mono themes
 
-| Command            | Description                                        |
-| ------------------ | -------------------------------------------------- |
-| `/todos`           | **List todos** - Show all todo items               |
-| `/todo add <text>` | **Add todo** - Create new todo item                |
-| `/todo done <num>` | **Complete todo** - Mark todo as finished          |
-| `/blocks`          | **List blocks** - Show collapsible output blocks   |
-| `/expand <n>`      | **Expand block** - Show full content of block N    |
-| `!<command>`       | **Shell command** - Execute shell command directly |
+### ⚙️ **Advanced Features**
 
----
+- **MCP Integration**: Model Context Protocol server support
+- **Mode System**: Architect, Code, Debug, and custom modes
+- **State Persistence**: Mode, model, theme settings persist between launches
+- **VS Code Compatibility**: Automatic settings detection and import
+- **Token Accuracy**: Context calculations match VS Code exactly
 
-## 🔑 **Complete Environment Variables**
+## 🎮 Interactive Commands
 
-### **AI Provider APIs**
+### Session Management
+
+- `/clear` - Clear current conversation
+- `/resume [id]` - List or load previous sessions
+- `/status` - Show current configuration and stats
+
+### Configuration
+
+- `/provider <name>` - Switch AI provider
+- `/model <id>` - Switch model
+- `/mode <slug>` - Switch mode (architect, code, debug, etc.)
+- `/login kilocode [token]` - Login to Kilocode platform
+- `/setup` - Configuration wizard and environment check
+
+### Utilities
+
+- `/help` - Show all available commands
+- `/models` - List available models for current provider
+- `/usage` - Show detailed token usage graph
+- `/test connection` - Test provider connectivity
+- `/theme default|mono` - Switch color themes
+- `!<command>` - Execute shell commands directly
+
+## 🔌 Supported Providers
+
+| Provider        | Environment Variable  | Models Available                      |
+| --------------- | --------------------- | ------------------------------------- |
+| **Anthropic**   | `ANTHROPIC_API_KEY`   | Claude 4 Sonnet, Claude 3.5 Sonnet    |
+| **OpenAI**      | `OPENAI_API_KEY`      | GPT-4o, GPT-4, GPT-3.5 Turbo          |
+| **Kilocode**    | `KILOCODE_TOKEN`      | 400+ models with free credits         |
+| **Groq**        | `GROQ_API_KEY`        | Llama 3.1, Mixtral (ultra-fast)       |
+| **Google**      | `GEMINI_API_KEY`      | Gemini Pro, Gemini Flash              |
+| **OpenRouter**  | `OPENROUTER_API_KEY`  | 200+ models from various providers    |
+| **Ollama**      | `OLLAMA_BASE_URL`     | Local models (Llama, CodeLlama, etc.) |
+| **LM Studio**   | `LMSTUDIO_BASE_URL`   | Local models with GUI                 |
+| **Fireworks**   | `FIREWORKS_API_KEY`   | Fast inference cloud                  |
+| **Featherless** | `FEATHERLESS_API_KEY` | High-performance models               |
+
+## 🏗️ Architecture
+
+### Standalone Design
+
+The CLI is completely self-contained:
+
+- **📦 Bundled Executable**: 23MB bundle includes all dependencies
+- **🔧 VS Code Shims**: Compatible interface without requiring VS Code extension
+- **💾 Independent Storage**: File-based session and configuration persistence
+- **🌐 MCP Support**: Built-in Model Context Protocol integration
+- **🎨 Professional UI**: Enhanced banner, streaming, and interactive features
+
+### Key Technical Features
+
+- **Perfect Context Calculation**: Matches VS Code token accounting exactly
+- **Smart Thinking Display**: Background accumulation with meaningful previews
+- **State Persistence**: Mode, model, theme, and session data persist between launches
+- **Horizontal-only UI**: Clean terminal layout without complex cursor management
+- **Natural Conversation Flow**: Direct responses for simple queries, tools when needed
+
+## 📋 Requirements
+
+- **Node.js 18+**
+- **API key** for chosen provider (or Kilocode account)
+- **Terminal** with color support (recommended)
+
+## 🚀 Getting Started
+
+1. **Install**: `npm install -g @kilocode/cli`
+2. **Setup**: Run `kilocode` and use `/setup` for configuration wizard
+3. **Configure provider**: Use `/login kilocode` or set environment variables
+4. **Start coding**: Ask questions, request file changes, run commands
+
+## 📖 Example Usage
 
 ```bash
-# Major Cloud Providers
-export OPENAI_API_KEY="sk-..."                 # OpenAI GPT models
-export ANTHROPIC_API_KEY="sk-ant-..."          # Claude models
-export GROQ_API_KEY="gsk_..."                  # Groq fast inference
-export GEMINI_API_KEY="..."                    # Google Gemini
-export KILOCODE_TOKEN="..."                    # Kilocode platform
-export OPENROUTER_API_KEY="..."                # OpenRouter aggregator
+# Start interactive session
+$ kilocode
 
-# Specialized Providers
-export FIREWORKS_API_KEY="..."                 # Fireworks AI
-export FEATHERLESS_API_KEY="..."               # Featherless
-
-# Local AI Servers
-export OLLAMA_BASE_URL="http://localhost:11434"    # Ollama server
-export LMSTUDIO_BASE_URL="http://localhost:1234"   # LM Studio server
-
-# Enterprise Providers
-export VERTEX_PROJECT_ID="your-gcp-project"    # Google Vertex AI
-export VERTEX_REGION="us-central1"             # Vertex region
-export AWS_ACCESS_KEY_ID="..."                 # AWS Bedrock
-export AWS_SECRET_ACCESS_KEY="..."             # AWS Bedrock
-export AWS_REGION="us-east-1"                  # AWS region
+# The CLI shows a professional banner with your configuration
+# Then you can chat naturally:
+> hello there
+> read the package.json file
+> create a simple todo app in HTML/CSS/JS
+> /mode architect
+> help me plan a new feature
 ```
 
-### **CLI Customization**
+## 🔄 Migration from VS Code
+
+The CLI automatically detects VS Code settings and can import configurations:
 
 ```bash
-export KILOCODE_CLI_STATE_DIR="/custom/path"   # Custom state directory
-export KILO_PROVIDER="openai"                  # Default provider
-export KILO_MODEL="gpt-4o"                     # Default model
-export KILO_CLI_THEME="mono"                   # Default theme (default|mono)
-export KILOCODE_LOGIN_BASE="https://app.kilocode.ai"  # Custom login URL
-export KILOCODE_LOGIN_PORT="43110"             # Custom login callback port
+/setup                    # Check for VS Code settings
+/config import <path>     # Import VS Code configuration
 ```
+
+## 📄 License
+
+MIT
+
+## ⚠️ Disclaimer
+
+This is an unofficial CLI tool created by Jason Kneen as a passion project. It is not endorsed by or associated with the official Kilo Code.
 
 ---
 
-## 🔌 **VS Code Integration Details**
+## 🗺️ Development Roadmap
 
-### **Automatic Settings Detection**
+### ✅ Core Implementation (Completed)
 
-The CLI automatically finds and uses VS Code settings from:
+- [x] **Runtime Stability**: Fixed initialization timing and memory management
+- [x] **TypeScript Compilation**: Resolved all CLI-specific import/type errors
+- [x] **VS Code Independence**: Complete standalone operation with shim architecture
+- [x] **State Persistence**: Mode, model, theme, session data persist between launches
+- [x] **Context Accuracy**: Perfect parity with VS Code token calculations
+- [x] **Professional Banner**: Enhanced ASCII design with clean horizontal layout
+- [x] **Smart Thinking Display**: Background content accumulation with meaningful previews
+- [x] **Session Management**: Conversation history with restore functionality
+- [x] **Multi-Provider Support**: 10+ AI providers with full configuration
+- [x] **npm Distribution**: Production-ready package with global installation
 
-**macOS:**
+### 🎨 UI/UX Enhancements (In Progress)
 
-```
-~/Library/Application Support/Code/User/globalStorage/kilocode.kilo-code
-~/Library/Application Support/Code - Insiders/User/globalStorage/kilocode.kilo-code
-```
+- [x] **Clean Streaming**: Removed post-response animations and timing issues
+- [x] **Enhanced Collapser**: Real-time content updates with Ctrl+R expansion
+- [x] **Perfect Alignment**: All configuration labels properly spaced
+- [ ] **Advanced Animations**: Smooth progress indicators and loading states
+- [ ] **Dynamic Layout**: Responsive terminal width adaptation
+- [ ] **Enhanced Colors**: More sophisticated color schemes and gradients
+- [ ] **Interactive Elements**: Clickable links and enhanced navigation
+- [ ] **Status Indicators**: Real-time connection and processing status
 
-**Linux:**
+### 🔧 Feature Enhancements
 
-```
-~/.config/Code/User/globalStorage/kilocode.kilo-code
-~/.config/Code - Insiders/User/globalStorage/kilocode.kilo-code
-```
+- [ ] **Enhanced Code Diffs**: Syntax highlighting for diff previews
+- [ ] **Smart Auto-completion**: Context-aware command and file completion
+- [ ] **Advanced Search**: Fuzzy file search and intelligent filtering
+- [ ] **Plugin System**: Extensible architecture for custom tools
+- [ ] **Configuration Profiles**: Multiple saved configurations for different projects
+- [ ] **Enhanced MCP**: Advanced Model Context Protocol features and server management
+- [ ] **Code Intelligence**: Advanced codebase analysis and suggestions
+- [ ] **Performance Metrics**: Detailed timing and performance analytics
 
-**Windows:**
+### 🧪 Testing & Quality
 
-```
-%APPDATA%/Code/User/globalStorage/kilocode.kilo-code
-%APPDATA%/Code - Insiders/User/globalStorage/kilocode.kilo-code
-```
+- [x] **Core Test Coverage**: Basic vitest framework integration
+- [ ] **Comprehensive Test Suite**: Full feature coverage with integration tests
+- [ ] **Performance Testing**: Load testing and memory profiling
+- [ ] **Cross-Platform Testing**: Windows, macOS, Linux compatibility verification
+- [ ] **Provider Testing**: Automated testing across all AI providers
+- [ ] **E2E Testing**: End-to-end workflow validation
+- [ ] **Regression Testing**: Automated testing for VS Code parity
+- [ ] **Security Testing**: API key handling and data protection validation
 
-### **Shared Configuration**
+### 🚀 Advanced Features
 
-- **Provider Profiles**: Same API keys and model preferences
-- **MCP Servers**: Full MCP server configuration sharing
-- **Custom Modes**: Reads project `.kilocodemodes` files
-- **Secrets Storage**: Shared authentication tokens
+- [ ] **Multi-Session Management**: Parallel conversation handling
+- [ ] **Workspace Intelligence**: Project-aware context and suggestions
+- [ ] **Advanced Streaming**: Progressive enhancement and real-time collaboration
+- [ ] **Performance Optimization**: Memory usage reduction and startup speed
+- [ ] **Enhanced Logging**: Detailed debug logs and troubleshooting tools
+- [ ] **API Rate Limiting**: Smart request management and queuing
+- [ ] **Backup & Sync**: Cloud backup and cross-device synchronization
+- [ ] **Team Features**: Shared sessions and collaborative development
 
-### **MCP Server Integration**
+### 📦 Distribution & Deployment
 
-```bash
-# MCP configuration hierarchy:
-# 1. Global: {VS Code storage}/mcpSettings.json
-# 2. Project: .kilocode/mcp.json
-# 3. Project: .mcp.json
-
-# Any MCP servers configured in VS Code are automatically available in CLI
-/mcp list    # Shows servers from both global and project config
-```
-
----
-
-## 📊 **Architecture & Performance**
-
-### **Shared Codebase Benefits**
-
-- **85% Code Reuse**: Leverages main project's API providers, tools, and logic
-- **Zero Maintenance**: Automatic updates when extension features are added
-- **Type Safety**: Full TypeScript integration with shared type definitions
-- **Instant Sync**: Changes to core providers/tools immediately available in CLI
-
-### **Performance Benchmarks**
-
-- **Cold Start Time**: <2 seconds with full banner and configuration
-- **Provider Switch**: <1 second for any provider change
-- **Real-time Streaming**: Character-by-character with zero buffer delays
-- **Memory Footprint**: ~50MB lightweight process
-- **Tool Execution**: Direct file system access for maximum speed
-- **Session Persistence**: Fast save/restore with JSON serialization
-
-### **Quality Metrics**
-
-- **Build Success**: 100% success rate across all environments
-- **Provider Coverage**: 10/15 major providers (66% - all essential ones)
-- **Tool Coverage**: 17/43 tools (39% - all CLI-appropriate tools)
-- **Error Recovery**: Comprehensive error handling with provider-specific diagnostics
-- **User Experience**: Professional terminal interface with rich features
+- [x] **npm Package**: Production-ready standalone package
+- [ ] **CI/CD Pipeline**: Automated testing and release workflow
+- [ ] **Docker Support**: Containerized deployment options
+- [ ] **Homebrew Formula**: macOS package manager integration
+- [ ] **Chocolatey Package**: Windows package manager support
+- [ ] **APT/YUM Packages**: Linux distribution packages
+- [ ] **GitHub Actions**: Integration workflow templates
+- [ ] **Documentation Site**: Comprehensive online documentation
 
 ---
 
-## 🤝 **Development**
+**💡 Tip**: Use `/help` in the CLI to see all available commands and features!
 
-### **File Structure**
-
-```
-apps/cli/
-├── src/
-│   ├── index.ts          # Main CLI application (terminal UI, session management)
-│   ├── api.ts            # API provider factory (10 providers)
-│   ├── tool-runner.ts    # Tool execution engine (16 tools)
-│   ├── mcp.ts           # MCP server integration
-│   ├── collapser.ts     # Terminal output management
-│   └── shims/           # VS Code API compatibility layer
-├── scripts/build.mjs    # ESBuild configuration with aliases
-├── dist/cli.cjs        # Compiled executable
-└── package.json        # CLI package definition
-```
-
-### **Contributing Guidelines**
-
-1. **Shared functionality** → Add to main `src/` directory (benefits both CLI and extension)
-2. **CLI-specific features** → Add to `apps/cli/src/`
-3. **Provider additions** → Add to main `src/api/providers/` (automatically available in CLI)
-4. **Tool additions** → Add to main `src/core/prompts/tools/` + implement in CLI `tool-runner.ts`
-
----
-
-**The Kilocode CLI delivers the complete AI coding assistant experience, optimized for command-line environments and power users!** 🚀
+**🤝 Contributing**: This roadmap represents our vision for the CLI's future. Contributions and suggestions are welcome!

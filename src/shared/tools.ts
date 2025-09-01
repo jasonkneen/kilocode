@@ -175,9 +175,19 @@ export interface NewTaskToolUse extends ToolUse {
 	params: Partial<Pick<Record<ToolParamName, string>, "mode" | "message" | "todos">>
 }
 
+export interface NewRuleToolUse extends ToolUse {
+	name: "new_rule"
+	params: Partial<Pick<Record<ToolParamName, string>, "title" | "description" | "target_file" | "instructions">>
+}
+
 export interface ReportBugToolUse extends ToolUse {
 	name: "report_bug"
 	params: Partial<Pick<Record<ToolParamName, string>, "title" | "description">>
+}
+
+export interface CondenseToolUse extends ToolUse {
+	name: "condense"
+	params: Partial<Record<ToolParamName, string>>
 }
 
 export interface SearchAndReplaceToolUse extends ToolUse {

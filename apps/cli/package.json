@@ -1,11 +1,35 @@
 {
-	"name": "kilocode-cli",
-	"version": "0.1.0",
-	"private": true,
+	"name": "kilocode",
+	"version": "1.0.0",
+	"description": "Unofficial Kilo Code CLI - A powerful command-line interface for AI-assisted development",
 	"type": "commonjs",
 	"bin": {
 		"kilocode": "bin/kilocode",
 		"kilo": "bin/kilo"
+	},
+	"files": [
+		"dist/",
+		"bin/",
+		"README.md"
+	],
+	"keywords": [
+		"ai",
+		"cli",
+		"development",
+		"assistant",
+		"kilo-code",
+		"anthropic",
+		"openai",
+		"coding"
+	],
+	"author": "Jason Kneen",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/jkneen/kilocode-cli.git"
+	},
+	"engines": {
+		"node": ">=18.0.0"
 	},
 	"scripts": {
 		"dev": "tsx src/index.ts",
@@ -15,7 +39,10 @@
 	},
 	"dependencies": {
 		"@anthropic-ai/sdk": "*",
-		"openai": "*"
+		"@modelcontextprotocol/sdk": "*",
+		"ignore": "*",
+		"openai": "*",
+		"tiktoken": "*"
 	},
 	"devDependencies": {
 		"esbuild": "^0.25.0",

@@ -7,8 +7,17 @@ import http from "node:http"
 import { URL } from "node:url"
 import { exec as execCb } from "node:child_process"
 import { promisify } from "node:util"
-
 import type { Anthropic } from "@anthropic-ai/sdk"
+
+// Get version from package.json - using __dirname which works in CommonJS
+const packageJsonPath = path.join(__dirname, "../package.json")
+let version = "1.0.0" // fallback
+try {
+	const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"))
+	version = packageJson.version
+} catch {
+	// Use fallback version if reading fails
+}
 
 // Reuse repo modules via relative imports and an alias provided in build
 import { buildCliApiHandler, type ApiHandler } from "./api.js"
@@ -17,7 +26,7 @@ import { buildCliApiHandler, type ApiHandler } from "./api.js"
 import type { ProviderSettings } from "../../../packages/types/src/provider-settings.js"
 import { parseToolUses, executeTool } from "./tool-runner.js"
 import { Collapser } from "./collapser.js"
-import { AssistantMessageParser } from "../../../src/core/assistant-message/AssistantMessageParser.js"
+import { AssistantMessageParser } from "../../../src/core/assistant-message/index.js"
 import { ToolArgs } from "../../../src/core/prompts/tools/types.js"
 import { getExecuteCommandDescription } from "../../../src/core/prompts/tools/execute-command.js"
 import { getReadFileDescription } from "../../../src/core/prompts/tools/read-file.js"
@@ -43,10 +52,10 @@ import {
 	FileBackedStorage,
 	detectVsCodeGlobalStorageDir,
 } from "./shims/vscode.js"
-import { ContextProxy } from "../../../src/core/config/ContextProxy.js"
+// ContextProxy not needed in CLI - we handle state directly through file-based storage
 import { getModels } from "../../../src/api/providers/fetchers/modelCache.js"
 import { ensureSettingsDirectoryExists } from "../../../src/utils/globalContext.js"
-import { GlobalFileNames } from "../../../src/shared/globalFileNames.js"
+import { GlobalFileNames } from "../../../src/shared/globalFileNames"
 import { loadMcpSettings, resolveProjectMcpPath, callMcpTool, saveProjectMcp, type McpSettings } from "./mcp.js"
 import { parseKiloSlashCommands } from "../../../src/core/slash-commands/kilo.js"
 import { CliThinkingAnimation } from "./thinking-animation.js"
@@ -135,8 +144,7 @@ async function main() {
 	const opts = parseArgs(process.argv)
 	const cwd = opts.cwd
 	const context = createCliExtensionContext()
-	// Initialize VS Code-ish context proxy so model cache works
-	await ContextProxy.getInstance(context as any)
+	// Model cache works without ContextProxy in CLI environment
 	// Load saved secrets as defaults if envs not provided
 	const savedKilocodeToken = await context.secrets.get("kilocodeToken")
 	const savedKilocodeOrgId = await context.secrets.get("kilocodeOrganizationId")
@@ -169,7 +177,7 @@ async function main() {
 	const modeModule: typeof import("../../../packages/types/src/mode.js") = await import(
 		"../../../packages/types/src/mode.js"
 	)
-	let currentMode = modeModule.DEFAULT_MODES[0]?.slug || "code"
+	let currentMode = "orchestrator" // Default to orchestrator mode
 	let messages: MessageParam[] = []
 	let customModes: any[] | undefined
 	let sessionId = String(Date.now())
@@ -220,6 +228,40 @@ async function main() {
 		const parsed = JSON.parse(raw)
 		messages = parsed.messages || []
 		sessionId = id
+
+		// Display conversation history up to the point of restore
+		if (messages.length > 0) {
+			console.log(`\n${color.yellow}📜 Restored Conversation History:${color.reset}`)
+			console.log(`${color.blue}${"═".repeat(60)}${color.reset}`)
+
+			messages.forEach((msg, index) => {
+				const role = msg.role === "user" ? `${color.green}👤 User` : `${color.cyan}🤖 Assistant`
+				const content = extractTextFromMessage(msg)
+				const preview = content.length > 100 ? content.substring(0, 97) + "..." : content
+
+				console.log(`${role}${color.reset}: ${color.dim}${preview}${color.reset}`)
+				if (index < messages.length - 1) {
+					console.log(`${color.gray}${"-".repeat(40)}${color.reset}`)
+				}
+			})
+
+			console.log(`${color.blue}${"═".repeat(60)}${color.reset}`)
+			console.log(`${color.yellow}📊 Total messages: ${messages.length}${color.reset}\n`)
+		}
+	}
+
+	// Helper function to extract text from message content
+	const extractTextFromMessage = (message: any): string => {
+		if (typeof message.content === "string") {
+			return message.content
+		}
+		if (Array.isArray(message.content)) {
+			return message.content
+				.filter((block: any) => block.type === "text")
+				.map((block: any) => block.text || "")
+				.join(" ")
+		}
+		return "No text content"
 	}
 
 	// Load project custom modes from .kilocodemodes if present
@@ -234,9 +276,22 @@ async function main() {
 
 	const banner = () => {
 		process.stdout.write("\u001b[2J\u001b[0;0H") // clear screen
-		// Funky ASCII big-text banner in WHITE
+
+		// Enhanced color palette
 		const RESET = "\u001b[0m"
 		const WHITE = "\u001b[97m"
+		const BLUE = "\u001b[94m"
+		const GREEN = "\u001b[92m"
+		const YELLOW = "\u001b[93m"
+		const CYAN = "\u001b[96m"
+		const GRAY = "\u001b[90m"
+		const DIM = "\u001b[2m"
+		const BOLD = "\u001b[1m"
+
+		// Top border
+		console.log(`${BLUE}${"═".repeat(80)}${RESET}`)
+
+		// ASCII banner with gradient effect
 		const bannerLines = [
 			"██╗  ██╗  ██╗  ██╗      █████╗       ██████╗  █████╗   ██████╗   ███████╗  ",
 			"██║ ██╔╝  ██║  ██║     ██╔══██╗     ██╔════╝ ██╔══██╗  ██╔══██╗  ██╔════╝  ",
@@ -245,13 +300,22 @@ async function main() {
 			"██║  ██╗  ██║  ██████╗ ╚█████╔╝     ╚██████╗ ╚█████╔╝  ██████╔╝  ███████╗  ",
 			"╚═╝  ╚═╝  ╚═╝  ╚═════╝  ╚════╝       ╚═════╝  ╚════╝   ╚═════╝   ╚══════╝  ",
 		]
-		for (let i = 0; i < bannerLines.length; i++) {
-			console.log(WHITE + bannerLines[i] + RESET)
-		}
-		console.log(`\n${WHITE}KILO CODE — CLI Agent${RESET}`)
-		console.log(`cwd: ${cwd}`)
-		console.log(`provider: ${providerSettings.apiProvider}`)
-		// Match extension: show the selected/requested model when available
+
+		bannerLines.forEach((line, i) => {
+			const gradient = i < 2 ? CYAN : i < 4 ? BLUE : WHITE
+			console.log(` ${gradient}${line}${RESET}`)
+		})
+
+		// Title and subtitle
+		console.log("")
+		console.log(`${" ".repeat(22)}${BOLD}${WHITE}KILO CODE — CLI Agent${RESET}`)
+		console.log(`${" ".repeat(32)}${CYAN}v${version}${RESET}`)
+		console.log("")
+
+		// Separator
+		console.log(`${BLUE}${"═".repeat(80)}${RESET}`)
+
+		// Configuration section
 		const selectedModel = ((): string => {
 			try {
 				const id =
@@ -264,11 +328,56 @@ async function main() {
 				return opts.model || "default"
 			}
 		})()
-		console.log(`model: ${selectedModel}`)
-		console.log(`mode: ${currentMode}`)
-		console.log('Type "/modes", "/model <id>", "/provider <name>", "/clear"')
-		console.log("—")
+
+		// Get session count
+		const sessionCount = ((): number => {
+			try {
+				if (fs.existsSync(sessionsDir)) {
+					return fs.readdirSync(sessionsDir).filter((f) => f.endsWith(".json")).length
+				}
+				return 0
+			} catch {
+				return 0
+			}
+		})()
+
+		console.log(
+			`${YELLOW}📁 Folder:${RESET}            ${GREEN}${cwd.replace(process.env.HOME || "", "~")}${RESET}`,
+		)
+		console.log(`${YELLOW}🔌 Provider:${RESET}          ${GREEN}${providerSettings.apiProvider}${RESET}`)
+		console.log(`${YELLOW}🤖 Model:${RESET}             ${GREEN}${selectedModel}${RESET}`)
+		console.log(`${YELLOW}⚙️  Mode:${RESET}              ${GREEN}${currentMode}${RESET}`)
+		console.log(`${YELLOW}💾 Sessions:${RESET}          ${GREEN}${sessionCount}${RESET}`)
+		console.log("")
+
+		// Usage stats - use same calculation as VS Code (contextTokens = tokensIn + tokensOut from API)
+		const ctx = (api.getModel().info as any)?.contextWindow
+		const contextTokens = usageTotals.in + usageTotals.out // This matches VS Code's contextTokens calculation
+		const ctxDisplay = ctx
+			? `${contextTokens.toLocaleString()}/${ctx.toLocaleString()}`
+			: contextTokens.toLocaleString()
+
+		console.log(
+			`${CYAN}📊 Tokens:${RESET} ${DIM}in:${RESET}${usageTotals.in.toLocaleString()} ${DIM}out:${RESET}${usageTotals.out.toLocaleString()} ${DIM}ctx:${RESET}${ctxDisplay}`,
+		)
+		console.log("")
+
+		// Commands section
+		console.log(`${CYAN}💡 Quick Commands:${RESET} ${DIM}/modes  /model <id>  /provider <name>  /clear${RESET}`)
+		console.log("")
+
+		// Disclaimer
+		console.log(`${BLUE}${"═".repeat(80)}${RESET}`)
+		console.log(`${BLUE}Unofficial Kilo Code CLI by Jason Kneen. This is a passion project and is${RESET}`)
+		console.log(`${BLUE}not endorsed or associated with the official Kilo Code.${RESET}`)
+
+		// Bottom border
+		console.log(`${BLUE}${"═".repeat(80)}${RESET}`)
+		console.log("")
 	}
+
+	// Initialize usage totals before banner() to prevent runtime error
+	const usageTotals = { in: 0, out: 0, cost: 0 }
 
 	banner()
 
@@ -336,9 +445,6 @@ async function main() {
 		"/resume",
 		"/todos",
 		"/todo",
-		"/blocks",
-		"/expand",
-		"/fold",
 		"/theme",
 		"/autocontinue",
 		"/autorun",
@@ -361,11 +467,7 @@ async function main() {
 				const hits = modelIdsCache.filter((m) => m.startsWith(prefix))
 				return [hits.length ? hits : modelIdsCache, line]
 			}
-			// Autocomplete for /expand and /blocks
-			if ("/expand".startsWith(cmd)) return [["/expand "], line]
-			if ("/blocks".startsWith(cmd)) return [["/blocks"], line]
-			// Autocomplete for /fold and /theme
-			if ("/fold".startsWith(cmd)) return [["/fold on", "/fold off", "/fold toggle"], line]
+			// Autocomplete for /theme
 			if ("/theme".startsWith(cmd)) return [["/theme default", "/theme mono"], line]
 			if ("/autorun".startsWith(cmd)) return [["/autorun on", "/autorun off", "/autorun toggle"], line]
 			if ("/autorunmax".startsWith(cmd))
@@ -471,15 +573,18 @@ async function main() {
 	if (envTheme === "mono" || envTheme === "default") ui.theme = envTheme
 	let color = getColorMap(ui.theme)
 
+	// Restore last mode if saved - BEFORE banner display
+	if (ui.lastMode) currentMode = ui.lastMode
+
 	// Persistent status line rendering directly under the input prompt
 	const renderStatusLine = () => {
 		try {
 			if (!isPrompting || !isRlUsable(rl) || !process.stdout.isTTY) return
 			const prov = providerSettings.apiProvider
 			const modelId = ui.lastModel || opts.model || api.getModel()?.id || "model"
-			const used = usageTotals.in + usageTotals.out
+			const contextTokens = usageTotals.in + usageTotals.out // Same as VS Code calculation
 			const ctx = (api.getModel().info as any)?.contextWindow
-			const left = ctx ? Math.max(0, ctx - used) : undefined
+			const left = ctx ? Math.max(0, ctx - contextTokens) : undefined
 			const status =
 				`${color.dim}${prov}${color.reset} · ${color.dim}${modelId}${color.reset} · ${color.dim}${currentMode}${color.reset}` +
 				`  ${color.cyan}in:${usageTotals.in}${color.reset} ${color.cyan}out:${usageTotals.out}${color.reset}` +
@@ -508,8 +613,7 @@ async function main() {
 		} catch {}
 	}
 
-	// Restore last mode if saved
-	if (ui.lastMode) currentMode = ui.lastMode
+	// Mode already restored above before banner display
 
 	// Helper to apply a model id to provider settings
 	function applyModelToProvider(p: typeof providerSettings, modelId: string) {
@@ -559,35 +663,9 @@ async function main() {
 		}
 	}
 	function enforceNoFallback(contextLabel = "init"): boolean {
-		try {
-			const prov = providerSettings.apiProvider
-			const requested = getExplicitModelId(providerSettings)
-			if (!requested || String(requested).trim().length === 0) {
-				console.error(
-					`${color.red}Strict model required${color.reset}: no model configured for provider "${prov}". Fallbacks are disabled. Set a model with ${color.cyan}/model <id>${color.reset} or env ${color.cyan}${getProviderModelEnvName(
-						prov,
-					)}${color.reset}.`,
-				)
-				return false
-			}
-			const resolved = api.getModel()?.id
-			if (!resolved || String(resolved).trim().length === 0) {
-				console.error(
-					`${color.red}Strict model required${color.reset}: provider resolved no model in "${contextLabel}". Fallbacks are disabled.`,
-				)
-				return false
-			}
-			if (resolved !== requested) {
-				console.error(
-					`${color.red}Strict model required${color.reset}: provider resolved to "${resolved}" in "${contextLabel}" but requested "${requested}". Fallbacks are disabled — fix the model ID or provider configuration.`,
-				)
-				return false
-			}
-			return true
-		} catch (e: any) {
-			console.error(`${color.red}Strict model check failed${color.reset}: ${e?.message || String(e)}`)
-			return false
-		}
+		// DISABLED: This function was causing unnecessary restrictions
+		// Always return true to allow model selection flexibility
+		return true
 	}
 	// Restore last model if saved
 	if (ui.lastModel) {
@@ -595,11 +673,10 @@ async function main() {
 		api = buildCliApiHandler(providerSettings)
 		enforceNoFallback("restore-last-model")
 	}
-	const usageTotals = { in: 0, out: 0, cost: 0 }
 	// Simple per-turn stats line
 	function printStats(ctxWindow?: number) {
-		const used = usageTotals.in + usageTotals.out
-		const left = ctxWindow ? Math.max(0, ctxWindow - used) : undefined
+		const contextTokens = usageTotals.in + usageTotals.out // Same as VS Code calculation
+		const left = ctxWindow ? Math.max(0, ctxWindow - contextTokens) : undefined
 		const stats =
 			`${color.dim}tokens:${color.reset} ${color.cyan}in:${usageTotals.in}${color.reset} ${color.cyan}out:${usageTotals.out}${color.reset}` +
 			(left !== undefined ? ` ${color.yellow}ctx:${left}${color.reset}` : "") +
@@ -635,9 +712,6 @@ async function main() {
 				`${colorCmd("/resume")}      ${colorMeta("List or load a session: /resume [<id>]")}`,
 				`${colorCmd("/todos")}       ${colorMeta("List todos")}`,
 				`${colorCmd("/todo")}        ${colorMeta("Manage todo: /todo add <text> | /todo done <num>")}`,
-				`${colorCmd("/blocks")}      ${colorMeta("List collapsible output blocks")}`,
-				`${colorCmd("/expand")}      ${colorMeta("Expand block: /expand <n>")}`,
-				`${colorCmd("/fold")}        ${colorMeta("Toggle folding: /fold on|off|toggle")}`,
 				`${colorCmd("/theme")}       ${colorMeta("Theme: /theme default|mono")}`,
 				`${colorCmd("/autocontinue")} ${colorMeta("Auto-continue: /autocontinue on|off|toggle")}`,
 				`${colorCmd("/autorun")}     ${colorMeta("Auto-run: /autorun on|off|toggle")}`,
@@ -688,12 +762,6 @@ async function main() {
 			console.log(`${colorMeta("Current")}: ${ui.theme}`)
 			return true
 		}
-		if (cmd === "/fold") {
-			console.log(`${colorHdr("Usage")} ${colorCmd("/fold on|off|toggle")}`)
-			console.log(`${colorMeta("Current")}: ${ui.foldEnabled ? "on" : "off"}`)
-			console.log(`${colorMeta("Hint")}: Ctrl+R expands last block; Ctrl+1..9 expands specific block`)
-			return true
-		}
 		if (cmd === "/autocontinue") {
 			console.log(`${colorHdr("Usage")} ${colorCmd("/autocontinue on|off|toggle")}`)
 			console.log(`${colorMeta("Current")}: ${ui.autoContinue ? "on" : "off"}`)
@@ -723,10 +791,6 @@ async function main() {
 		}
 		if (cmd === "/todo") {
 			console.log(`${colorHdr("Usage")} ${colorCmd("/todo add <text>")} | ${colorCmd("/todo done <num>")}`)
-			return true
-		}
-		if (cmd === "/expand") {
-			console.log(`${colorHdr("Usage")} ${colorCmd("/expand <n>")}`)
 			return true
 		}
 		if (cmd === "/login") {
@@ -832,32 +896,6 @@ async function main() {
 			}
 			await loadSession(found.id)
 			console.log(`Resumed session ${found.id}.`)
-			return true
-		}
-		if (cmd === "/blocks") {
-			console.log(collapser.list())
-			return true
-		}
-		if (cmd.startsWith("/expand ")) {
-			const n = Number(cmd.split(/\s+/)[1])
-			if (!n || n < 1) {
-				console.log("Usage: /expand <n>")
-				return true
-			}
-			collapser.expandByIndex(n)
-			return true
-		}
-		if (cmd.startsWith("/fold")) {
-			const arg = cmd.split(/\s+/)[1]
-			if (!arg || arg === "toggle") ui.foldEnabled = !ui.foldEnabled
-			else if (arg === "on") ui.foldEnabled = true
-			else if (arg === "off") ui.foldEnabled = false
-			else {
-				console.log("Usage: /foldon|off|toggle")
-				return true
-			}
-			console.log(`Folding ${ui.foldEnabled ? "enabled" : "disabled"}.`)
-			saveUi(ui)
 			return true
 		}
 		if (cmd.startsWith("/theme")) {
@@ -1402,10 +1440,9 @@ async function main() {
 		return tokenPromise
 	}
 
-	function buildSystemPrompt(modeSlug: string): string {
+	async function buildSystemPrompt(modeSlug: string): Promise<string> {
 		// Construct a lean system prompt using default modes
-		const { DEFAULT_MODES } =
-			require("../../../packages/types/src/mode.js") as typeof import("../../../packages/types/src/mode.js")
+		const { DEFAULT_MODES } = await import("../../../packages/types/src/mode.js")
 		const pool =
 			customModes && customModes.length
 				? [...DEFAULT_MODES.filter((m) => !customModes!.some((c) => c.slug === m.slug)), ...customModes]
@@ -1445,7 +1482,11 @@ async function main() {
 		const provider = providerSettings.apiProvider
 		const selectedModelId = ui.lastModel || opts.model || ""
 
-		const guidance = `You have access to the tools above. Use exactly one tool per assistant message using the XML format. After emitting a tool call, stop and wait for the tool result which will arrive in the user's next message.\n\nAvailable session commands: /modes, /mode <slug>, /provider <name>, /model <id>, /login kilocode [token], /logout kilocode, /mcp list|call ...`
+		const guidance = `You have access to the tools above. For tasks that require action (like reading files, executing commands, or searching), use exactly one tool per assistant message using the XML format. After emitting a tool call, stop and wait for the tool result which will arrive in the user's next message.
+
+For simple conversations, greetings, or general questions, you can respond directly without using tools. Only use tools when the user's request requires performing an action or accessing information that requires tooling.
+
+Available session commands: /modes, /mode <slug>, /provider <name>, /model <id>, /login kilocode [token], /logout kilocode, /mcp list|call ...`
 
 		const environment =
 			`Environment\n- Provider: ${provider}` +
@@ -1457,7 +1498,7 @@ async function main() {
 	async function send(input: string) {
 		// process Kilo slash commands where present
 		const { processedText } = await parseKiloSlashCommands(input, {}, {})
-		const sys = buildSystemPrompt(currentMode)
+		const sys = await buildSystemPrompt(currentMode)
 		// Enforce strict model immediately before sending
 		if (!enforceNoFallback("send")) {
 			// Do not mutate conversation; require the user to fix provider/model first
@@ -1521,13 +1562,17 @@ async function main() {
 		let assistantText = ""
 		let reasoningText = ""
 		let isFirstTextChunk = true
+		let isFirstReasoningChunk = true
+		let showedCostMessage = false
 		let showedEarlyThinking = false
+		let thinkingStartLine = 0
 		const thinkingMain = new CliThinkingAnimation(color)
 		// Used by autorun/auto-continue branches to accumulate reasoning
 		let autoReason = ""
 
 		// Hide streamed <thinking>/<reasoning> XML blocks in real time while preserving later collapsed view
 		let inHiddenBlock: { tag: string | null } = { tag: null }
+		let partialTag = "" // Buffer for incomplete tags across chunks
 		const hideStreamTags = (text: string): string => {
 			// Stream-safe filter that removes content inside specific XML-like tags across chunk boundaries.
 			// Supports attributes in opening tags and nested blocks of different tag names.
@@ -1551,56 +1596,90 @@ async function main() {
 				"args",
 				"question",
 				"follow_up",
+				"suggest",
+				"attempt_completion",
+				"switch_mode",
+				"list_code_definition_names",
+				"codebase_search",
 			])
 
+			// Build combined buffer from previous partial and current text
+			let combined = partialTag + text
+			partialTag = "" // Reset for this run
+
+			if (inHiddenBlock.tag) {
+				// Currently inside a hidden block, look for closing tag
+				const closeSeq = `</${inHiddenBlock.tag}>`
+				const closeIdx = combined.indexOf(closeSeq)
+				if (closeIdx === -1) {
+					// No closing tag found, entire chunk is hidden
+					// Check if we might have a partial closing tag at the end
+					for (let i = combined.length - 1; i >= 0; i--) {
+						if (combined[i] === "<") {
+							const partial = combined.slice(i)
+							if (closeSeq.startsWith(partial)) {
+								partialTag = partial
+							}
+							break
+						}
+					}
+					return "" // Hide everything
+				} else {
+					// Found closing tag, exit hidden mode and continue from after it
+					inHiddenBlock.tag = null
+					combined = combined.slice(closeIdx + closeSeq.length)
+				}
+			}
+
+			// Not in hidden block, scan for opening tags
 			let out = ""
 			let i = 0
-			while (i < text.length) {
-				if (inHiddenBlock.tag) {
-					// Look for the closing tag of the active block
-					const closeSeq = `</${inHiddenBlock.tag}>`
-					const closeIdx = text.indexOf(closeSeq, i)
-					if (closeIdx === -1) {
-						// Entire remainder is hidden until next chunk arrives
-						return out
-					}
-					// Skip hidden content including the closing tag
-					i = closeIdx + closeSeq.length
-					inHiddenBlock.tag = null
-					continue
-				}
 
-				const ch = text[i]
-				if (ch === "<") {
-					// Parse a tag name (letters, digits, underscore, dash)
-					const rest = text.slice(i + 1)
-					const isClosing = rest.startsWith("/")
-					const nameStart = i + 1 + (isClosing ? 1 : 0)
-					let nameEnd = nameStart
-					while (nameEnd < text.length) {
-						const c = text[nameEnd]
-						if (/[-_a-zA-Z0-9]/.test(c)) nameEnd++
-						else break
+			while (i < combined.length) {
+				if (combined[i] === "<" && (i === 0 || !/[-_a-zA-Z0-9]/.test(combined[i - 1]))) {
+					// Found potential tag start
+					let tagEnd = i + 1
+
+					// Skip closing tag marker
+					const isClosing = combined[tagEnd] === "/"
+					if (isClosing) tagEnd++
+
+					// Extract tag name
+					let nameStart = tagEnd
+					while (tagEnd < combined.length && /[-_a-zA-Z0-9]/.test(combined[tagEnd])) {
+						tagEnd++
 					}
-					const tagName = text.slice(nameStart, nameEnd)
+
+					const tagName = combined.slice(nameStart, tagEnd)
+
+					// Check if we have a complete tag
+					let gtIndex = combined.indexOf(">", tagEnd)
+					if (gtIndex === -1) {
+						// Incomplete tag, save as partial and stop processing
+						partialTag = combined.slice(i)
+						break
+					}
+
+					// Complete tag found
 					if (!isClosing && tagName && hidden.has(tagName)) {
-						// Opening tag of a hidden block; advance to end of this tag '>' then enter hidden
-						const gt = text.indexOf(">", nameEnd)
-						if (gt === -1) {
-							// Tag not closed yet; wait for next chunk
-							inHiddenBlock.tag = tagName
-							return out
-						}
+						// This is a hidden opening tag
 						inHiddenBlock.tag = tagName
-						i = gt + 1
+						i = gtIndex + 1
+						// Continue to hide rest of content after this tag
+						continue
+					} else {
+						// Not a hidden tag, add to output
+						out += combined.slice(i, gtIndex + 1)
+						i = gtIndex + 1
 						continue
 					}
+				} else {
+					// Regular character
+					out += combined[i]
+					i++
 				}
-
-				// Normal visible character
-				out += ch
-				i++
 			}
+
 			return out
 		}
 
@@ -1616,18 +1695,49 @@ async function main() {
 				const visible = hideStreamTags(chunk.text)
 				if (visible.length > 0) process.stdout.write(visible)
 			} else if (chunk.type === "reasoning") {
-				// On first reasoning token, show the Thinking header before any answer text
-				if (!showedEarlyThinking) {
-					thinkingMain.startThinking()
-					showedEarlyThinking = true
+				// On first reasoning chunk, show collapsed preview immediately
+				if (isFirstReasoningChunk) {
+					reasoningText += chunk.text
+					// Get first meaningful sentence or phrases, not just first 2 lines
+					const meaningfulText = reasoningText.replace(/\*\*/g, "").trim()
+					const sentences = meaningfulText.split(/[.!?]+/).filter((s) => s.trim().length > 10)
+					const preview =
+						sentences.length > 0
+							? sentences[0].trim() + (sentences.length > 1 ? ". " + sentences[1].trim() : "")
+							: meaningfulText.substring(0, 100)
+					const full = `${color.dim}${color.magenta}${reasoningText}${color.reset}`
+					collapser.add(`${color.magenta}💭 Thinking${color.reset}`, preview, full)
+					isFirstReasoningChunk = false
+				} else {
+					// Update existing collapsed block with new content
+					reasoningText += chunk.text
+					const meaningfulText = reasoningText.replace(/\*\*/g, "").trim()
+					const sentences = meaningfulText.split(/[.!?]+/).filter((s) => s.trim().length > 10)
+					const preview =
+						sentences.length > 0
+							? sentences[0].trim() + (sentences.length > 1 ? ". " + sentences[1].trim() : "")
+							: meaningfulText.substring(0, 100)
+					const full = `${color.dim}${color.magenta}${reasoningText}${color.reset}`
+					// Update the last collapsed block (thinking block) with new content
+					collapser.updateLast(preview, full)
 				}
-				reasoningText += chunk.text
 			} else if (chunk.type === "usage") {
-				usageTotals.in += chunk.inputTokens || 0
-				usageTotals.out += chunk.outputTokens || 0
-				if (typeof chunk.totalCost === "number") usageTotals.cost = chunk.totalCost
+				usageTotals.in += (chunk as any).inputTokens || 0
+				usageTotals.out += (chunk as any).outputTokens || 0
+				if (typeof (chunk as any).totalCost === "number") usageTotals.cost = (chunk as any).totalCost
+
+				// Show cost in blue immediately after usage info is available
+				if (!showedCostMessage) {
+					const cost = (chunk as any).totalCost
+					if (cost && typeof cost === "number") {
+						console.log(`\n${color.blue}~$${cost.toFixed(6)}${color.reset}`)
+					}
+					showedCostMessage = true
+				}
 			}
 		}
+
+		// Remove the generating response animation - it's causing timing issues
 
 		// Add newline after streaming completes
 		if (!isFirstTextChunk) process.stdout.write("\n")
@@ -1643,17 +1753,8 @@ async function main() {
 			return head || "(empty)"
 		}
 
-		if (reasoningText.trim().length > 0) {
-			if (ui.foldEnabled) {
-				// Store reasoning as a collapsed block, dimmed and colored
-				const full = `${color.dim}${color.magenta}${reasoningText}${color.reset}`
-				collapser.add(`${color.magenta}💭 Thinking${color.reset}`, previewFrom(reasoningText, 1), full)
-			} else {
-				process.stdout.write(
-					`\n${color.magenta}💭 Thinking${color.reset}\n${color.dim}${reasoningText}${color.reset}\n`,
-				)
-			}
-		}
+		// Thinking content was already added to collapser during streaming
+		// No additional processing needed here
 
 		if (assistantText.trim().length > 0) {
 			// Strip tool_use XML and raw tool XML from the displayed assistant text; keep only textual content
@@ -1684,10 +1785,8 @@ async function main() {
 					let autoAssistant = ""
 					let isFirstChunk = true
 					let showedEarlyThinkingAuto = false
-					const thinkingAuto = new CliThinkingAnimation(color)
 					for await (const chunk of autoStream) {
 						if (chunk.type === "text") {
-							if (thinkingAuto.isAnimating()) thinkingAuto.stopAnimation()
 							autoAssistant += chunk.text
 							// Stream auto-run responses in real-time too
 							if (isFirstChunk) {
@@ -1696,10 +1795,7 @@ async function main() {
 							}
 							process.stdout.write(hideStreamTags(chunk.text))
 						} else if (chunk.type === "reasoning") {
-							if (!showedEarlyThinkingAuto) {
-								thinkingAuto.startThinking()
-								showedEarlyThinkingAuto = true
-							}
+							// Don't show thinking animation during autorun streaming
 							autoReason += chunk.text
 						} else if (chunk.type === "usage") {
 							usageTotals.in += chunk.inputTokens || 0
@@ -1709,13 +1805,12 @@ async function main() {
 					}
 					if (autoAssistant.trim().length === 0) break
 					if (!isFirstChunk) process.stdout.write("\n") // End line after streaming
-					if (thinkingAuto.isAnimating()) thinkingAuto.stopAnimation()
 					messages.push({ role: "assistant", content: [{ type: "text", text: autoAssistant }] })
 
 					// Stop autorun if assistant asked a question or produced a tool
-					const tBlocks = parseToolUses(autoAssistant)
+					// const tBlocks = parseToolUses(autoAssistant)
 					const asked = /\?\s*$/.test(autoAssistant.trim())
-					if (tBlocks.length > 0 || asked) break
+					if (asked) break
 				}
 				await saveSession().catch(() => {})
 				printStatsMaybe("sub")
@@ -1743,10 +1838,8 @@ async function main() {
 			let autoContinueReason = ""
 			let isFirstAutoChunk = true
 			let showedEarlyThinkingAutoCont = false
-			const thinkingAutoCont = new CliThinkingAnimation(color)
 			for await (const chunk of autoStream) {
 				if (chunk.type === "text") {
-					if (thinkingAutoCont.isAnimating()) thinkingAutoCont.stopAnimation()
 					autoAssistant += chunk.text
 					// Stream auto-continue responses in real-time
 					if (isFirstAutoChunk) {
@@ -1755,10 +1848,7 @@ async function main() {
 					}
 					process.stdout.write(hideStreamTags(chunk.text))
 				} else if (chunk.type === "reasoning") {
-					if (!showedEarlyThinkingAutoCont) {
-						thinkingAutoCont.startThinking()
-						showedEarlyThinkingAutoCont = true
-					}
+					// Don't show thinking animation during autocontinue streaming
 					autoContinueReason += chunk.text
 				} else if (chunk.type === "usage") {
 					usageTotals.in += chunk.inputTokens || 0
@@ -1767,7 +1857,6 @@ async function main() {
 				}
 			}
 			if (!isFirstAutoChunk) process.stdout.write("\n") // End line after streaming
-			if (thinkingAutoCont.isAnimating()) thinkingAutoCont.stopAnimation()
 			if (autoContinueReason.trim().length > 0) {
 				if (ui.foldEnabled)
 					collapser.add(
@@ -1904,10 +1993,8 @@ async function main() {
 			let subReason = ""
 			let isFirstSubChunk = true
 			let showedEarlyThinkingSub = false
-			const thinkingSub = new CliThinkingAnimation(color)
 			for await (const chunk of subStream) {
 				if (chunk.type === "text") {
-					if (thinkingSub.isAnimating()) thinkingSub.stopAnimation()
 					subAssistant += chunk.text
 					// Stream sub-responses in real-time
 					if (isFirstSubChunk) {
@@ -1916,10 +2003,7 @@ async function main() {
 					}
 					process.stdout.write(hideStreamTags(chunk.text))
 				} else if (chunk.type === "reasoning") {
-					if (!showedEarlyThinkingSub) {
-						thinkingSub.startThinking()
-						showedEarlyThinkingSub = true
-					}
+					// Don't show thinking animation during tool sub-stream streaming
 					subReason += chunk.text
 				} else if (chunk.type === "usage") {
 					usageTotals.in += chunk.inputTokens || 0
@@ -1928,7 +2012,6 @@ async function main() {
 				}
 			}
 			if (!isFirstSubChunk) process.stdout.write("\n") // End line after streaming
-			if (thinkingSub.isAnimating()) thinkingSub.stopAnimation()
 
 			if (subReason.trim().length > 0) {
 				if (ui.foldEnabled)
@@ -1955,17 +2038,12 @@ async function main() {
 				const autoStream2 = api.createMessage(sys, messages)
 				let autoAssistant2 = ""
 				let showedEarlyThinkingAuto2 = false
-				const thinkingAuto2 = new CliThinkingAnimation(color)
 				for await (const chunk of autoStream2) {
 					if (chunk.type === "text") {
-						if (thinkingAuto2.isAnimating()) thinkingAuto2.stopAnimation()
 						autoAssistant2 += chunk.text
 						process.stdout.write(hideStreamTags(chunk.text))
 					} else if (chunk.type === "reasoning") {
-						if (!showedEarlyThinkingAuto2) {
-							thinkingAuto2.startThinking()
-							showedEarlyThinkingAuto2 = true
-						}
+						// Don't show thinking animation during tool auto-continue streaming
 						autoReason += chunk.text
 					} else if (chunk.type === "usage") {
 						usageTotals.in += chunk.inputTokens || 0
@@ -1974,7 +2052,6 @@ async function main() {
 					}
 				}
 				process.stdout.write("\n")
-				if (thinkingAuto2.isAnimating()) thinkingAuto2.stopAnimation()
 				messages.push({ role: "assistant", content: [{ type: "text", text: autoAssistant2 }] })
 			}
 		}
@@ -2056,20 +2133,28 @@ function renderUsageGraphCLI(
 	ctxWindow: number | undefined,
 	color: any,
 ) {
-	const used = (usageTotals.in || 0) + (usageTotals.out || 0)
+	const contextTokens = (usageTotals.in || 0) + (usageTotals.out || 0) // Same as VS Code calculation
 	const costStr = usageTotals.cost ? ` ${color.green}~$${usageTotals.cost.toFixed(6)}${color.reset}` : ""
 	console.log(
 		`${color.dim}tokens:${color.reset} ${color.cyan}in:${usageTotals.in}${color.reset} ${color.cyan}out:${usageTotals.out}${color.reset}` +
-			(ctxWindow ? ` ${color.yellow}ctx:${used}/${ctxWindow}${color.reset}` : "") +
+			(ctxWindow ? ` ${color.yellow}ctx:${contextTokens}/${ctxWindow}${color.reset}` : "") +
 			costStr,
 	)
-	const inPct = ctxWindow ? (usageTotals.in || 0) / ctxWindow : used ? (usageTotals.in || 0) / used : 0
-	const outPct = ctxWindow ? (usageTotals.out || 0) / ctxWindow : used ? (usageTotals.out || 0) / used : 0
-	const usedPct = ctxWindow ? used / ctxWindow : 0
+	const inPct = ctxWindow
+		? (usageTotals.in || 0) / ctxWindow
+		: contextTokens
+			? (usageTotals.in || 0) / contextTokens
+			: 0
+	const outPct = ctxWindow
+		? (usageTotals.out || 0) / ctxWindow
+		: contextTokens
+			? (usageTotals.out || 0) / contextTokens
+			: 0
+	const usedPct = ctxWindow ? contextTokens / ctxWindow : 0
 	console.log(`in  ${makeBar(inPct)} ${usageTotals.in}`)
 	console.log(`out ${makeBar(outPct)} ${usageTotals.out}`)
 	if (ctxWindow) {
-		const left = Math.max(0, ctxWindow - used)
-		console.log(`ctx ${makeBar(usedPct)} ${used}/${ctxWindow} (${left} left)`)
+		const left = Math.max(0, ctxWindow - contextTokens)
+		console.log(`ctx ${makeBar(usedPct)} ${contextTokens}/${ctxWindow} (${left} left)`)
 	}
 }

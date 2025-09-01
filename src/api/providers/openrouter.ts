@@ -10,25 +10,25 @@ import {
 	ModelInfo, // kilocode_change
 } from "@roo-code/types"
 
-import type { ApiHandlerOptions, ModelRecord } from "../../shared/api"
+import type { ApiHandlerOptions, ModelRecord } from "../../shared/api.ts"
 
-import { convertToOpenAiMessages } from "../transform/openai-format"
-import { ApiStreamChunk } from "../transform/stream"
-import { convertToR1Format } from "../transform/r1-format"
-import { addCacheBreakpoints as addAnthropicCacheBreakpoints } from "../transform/caching/anthropic"
-import { addCacheBreakpoints as addGeminiCacheBreakpoints } from "../transform/caching/gemini"
-import type { OpenRouterReasoningParams } from "../transform/reasoning"
-import { getModelParams } from "../transform/model-params"
+import { convertToOpenAiMessages } from "../transform/openai-format.ts"
+import { ApiStreamChunk } from "../transform/stream.ts"
+import { convertToR1Format } from "../transform/r1-format.ts"
+import { addCacheBreakpoints as addAnthropicCacheBreakpoints } from "../transform/caching/anthropic.ts"
+import { addCacheBreakpoints as addGeminiCacheBreakpoints } from "../transform/caching/gemini.ts"
+import type { OpenRouterReasoningParams } from "../transform/reasoning.ts"
+import { getModelParams } from "../transform/model-params.ts"
 
-import { getModels } from "./fetchers/modelCache"
-import { getModelEndpoints } from "./fetchers/modelEndpointCache"
+import { getModels } from "./fetchers/modelCache.ts"
+import { getModelEndpoints } from "./fetchers/modelEndpointCache.ts"
 
-import { DEFAULT_HEADERS } from "./constants"
-import { BaseProvider } from "./base-provider"
+import { DEFAULT_HEADERS } from "./constants.ts"
+import { BaseProvider } from "./base-provider.ts"
 import type {
 	ApiHandlerCreateMessageMetadata, // kilocode_change
 	SingleCompletionHandler,
-} from "../index"
+} from "../index.ts"
 
 // kilocode_change start
 type OpenRouterProviderParams = {
