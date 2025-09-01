@@ -6,7 +6,7 @@
   <a href="https://www.reddit.com/r/kilocode/"><img src="https://img.shields.io/reddit/subreddit-subscribers/kilocode?style=flat&logo=reddit&logoColor=white" alt="Reddit"></a>
 </p>
 
-# 🚀 Kilo Code
+# 🚀 Kilo Code UNOFFICIAL CLI BRANCH 
 
 > Open-source VS Code AI agent. We frequently merge features from open-source projects, such as [Roo Code](https://github.com/RooVetGit/Roo-Code) and [Cline](https://github.com/cline/cline), while building our own vision.
 
