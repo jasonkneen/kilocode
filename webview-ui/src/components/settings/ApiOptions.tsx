@@ -36,6 +36,7 @@ import {
 	ioIntelligenceDefaultModelId,
 	qwenCodeDefaultModelId,
 	rooDefaultModelId,
+	deepInfraDefaultModelId, // kilocode_change
 } from "@roo-code/types"
 
 import { vscode } from "@src/utils/vscode"
@@ -94,6 +95,7 @@ import {
 	GeminiCli,
 	VirtualQuotaFallbackProvider,
 	QwenCode,
+	DeepInfra,
 	// kilocode_change end
 	ZAi,
 	Fireworks,
@@ -206,6 +208,7 @@ const ApiOptions = ({
 		openRouterBaseUrl: apiConfiguration?.openRouterBaseUrl,
 		openRouterApiKey: apiConfiguration?.openRouterApiKey,
 		kilocodeOrganizationId: apiConfiguration?.kilocodeOrganizationId ?? "personal",
+		deepInfraApiKey: apiConfiguration?.deepInfraApiKey,
 	})
 
 	//const { data: openRouterModelProviders } = useOpenRouterModelProviders(
@@ -371,6 +374,7 @@ const ApiOptions = ({
 				kilocode: { field: "kilocodeModel", default: kilocodeDefaultModel },
 				"gemini-cli": { field: "apiModelId", default: geminiCliDefaultModelId },
 				"qwen-code": { field: "apiModelId", default: qwenCodeDefaultModelId },
+				deepinfra: { field: "deepInfraModelId", default: deepInfraDefaultModelId },
 				// kilocode_change end
 			}
 
@@ -666,6 +670,21 @@ const ApiOptions = ({
 					modelValidationError={modelValidationError}
 				/>
 			)}
+
+			{
+				// kilocode_change start
+				selectedProvider === "deepinfra" && (
+					<DeepInfra
+						apiConfiguration={apiConfiguration}
+						setApiConfigurationField={setApiConfigurationField}
+						routerModels={routerModels}
+						refetchRouterModels={() => refetchRouterModels()}
+						organizationAllowList={organizationAllowList}
+						modelValidationError={modelValidationError}
+					/>
+				)
+				// kilocode_change end
+			}
 
 			{selectedProvider === "human-relay" && (
 				<>
