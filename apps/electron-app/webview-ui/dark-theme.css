@@ -1,0 +1,70 @@
+/* Dark theme override for dev server */
+:root {
+	/* Darker palette */
+	--vscode-editor-background: #0f1115;
+	--vscode-editor-foreground: #d6dbe1;
+	--vscode-sideBar-background: #15171c;
+	--vscode-sideBar-foreground: #c9d1d9;
+	--vscode-panel-background: #0f1115;
+	--vscode-panel-border: #2b2f36;
+	--vscode-focusBorder: #0a84ff;
+	--vscode-button-background: #0e639c;
+	--vscode-button-foreground: #ffffff;
+	--vscode-input-background: #121418;
+	--vscode-input-foreground: #c9d1d9;
+	--vscode-input-border: #3a3f46;
+	--vscode-dropdown-background: #23272e;
+	--vscode-dropdown-foreground: #c9d1d9;
+	--vscode-list-hoverBackground: #1b1f27;
+	--vscode-list-activeSelectionBackground: #0d3a68;
+	--vscode-textBlockQuote-background: #1a1d23;
+	--vscode-textBlockQuote-border: #0a84ff;
+	--vscode-textCodeBlock-background: #13161c;
+	/* Make file READs distinct (green) */
+	--vscode-textLink-foreground: #2ea043; /* reads */
+	--vscode-textLink-activeForeground: #52c26a;
+	--vscode-descriptionForeground: #9aa4b2;
+	--vscode-errorForeground: #f85149;
+	--vscode-warningForeground: #ffab70;
+
+	/* Tokens used by TaskTimeline */
+	/* Tooling (general tools) distinct cyan; success remains green */
+	--vscode-activityBarBadge-background: #18a0fb; /* tooling */
+	--vscode-editorGutter-addedBackground: #2ea043; /* success */
+	--vscode-badge-background: #6e7681; /* neutral gray default */
+	--vscode-editor-findMatchBackground: #9e6a03; /* amber base mixed for questions */
+
+	/* Rounder corners and slightly smaller type */
+	--ui-border-radius: 12px;
+	--radius: 0.9rem;
+	color-scheme: dark;
+}
+
+body {
+	background: var(--vscode-editor-background);
+	color: var(--vscode-editor-foreground);
+	font-size: 13px;
+}
+
+/* Round VS Code webview toolkit controls */
+vscode-button::part(control),
+vscode-dropdown::part(control),
+vscode-dropdown::part(listbox),
+vscode-text-field::part(control),
+vscode-text-area::part(control),
+vscode-checkbox::part(control) {
+	border-radius: var(--ui-border-radius, 12px);
+}
+
+/* Make common surface containers a bit rounder */
+.panel,
+.card,
+.popover,
+.menu,
+.dropdown-container,
+.context-menu,
+section,
+article,
+aside {
+	border-radius: calc(var(--ui-border-radius, 12px));
+}

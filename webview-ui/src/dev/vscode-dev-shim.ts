@@ -23,7 +23,9 @@ function parseThemeFromUrl(): ThemeKind | undefined {
 		const url = new URL(window.location.href)
 		const t = url.searchParams.get("theme")?.toLowerCase()
 		if (t === "light" || t === "dark") return t
-	} catch {}
+	} catch {
+		// Silently ignore errors
+	}
 	return undefined
 }
 
@@ -37,13 +39,17 @@ function parseThemeFromUrl(): ThemeKind | undefined {
 	applyTheme(initial)
 	try {
 		localStorage.setItem(THEME_KEY, initial)
-	} catch {}
+	} catch {
+		// Silently ignore errors
+	}
 
 	;(window as any).__setTheme = (next: ThemeKind) => {
 		if (next !== "light" && next !== "dark") return
 		applyTheme(next)
 		try {
 			localStorage.setItem(THEME_KEY, next)
-		} catch {}
+		} catch {
+			// Silently ignore errors
+		}
 	}
 })()

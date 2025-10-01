@@ -331,7 +331,9 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 								apiProvider: cfg?.apiProvider || "kilocode",
 							}))
 						}
-					} catch {}
+					} catch {
+						// Silently ignore errors when parsing stored configuration
+					}
 					setState((prev) => ({
 						...prev,
 						apiConfiguration: providers,

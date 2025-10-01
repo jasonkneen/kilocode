@@ -1,7 +1,9 @@
-import { app, BrowserWindow, shell } from "electron"
+import { app, BrowserWindow, shell, ipcMain } from "electron"
 import { net } from "electron"
 import path from "path"
 import fs from "fs"
+import { spawn } from "child_process"
+import { kiloCodeBackend } from "./kilocode-backend"
 
 class ElectronApp {
 	private mainWindow: BrowserWindow | null = null
@@ -12,6 +14,9 @@ class ElectronApp {
 	}
 
 	private setupApp(): void {
+		// Setup IPC handlers
+		this.setupIpcHandlers()
+
 		app.whenReady().then(() => {
 			this.createMainWindow()
 		})
@@ -159,6 +164,205 @@ class ElectronApp {
 		}
 		// Fallback to default Vite port
 		return "5173"
+	}
+
+	private setupIpcHandlers(): void {
+		// Handler for executing claude CLI with streaming support
+		ipcMain.handle("execute-claude-stream", (event, args) => {
+			const claudePath = args.path || "claude"
+
+			// Match KiloCode's exact arguments
+			const claudeArgs = [
+				"-p",
+				"--system-prompt",
+				args.systemPrompt,
+				"--verbose",
+				"--output-format",
+				"stream-json",
+				"--max-turns",
+				"20",
+			]
+
+			if (args.model) {
+				claudeArgs.push("--model", args.model)
+			}
+
+			const claudeProcess = spawn(claudePath, claudeArgs, {
+				env: {
+					...process.env,
+					CLAUDE_CODE_MAX_OUTPUT_TOKENS: args.maxOutputTokens?.toString() || "8192",
+				},
+			})
+
+			let stderr = ""
+
+			const readline = require("readline")
+			const rl = readline.createInterface({
+				input: claudeProcess.stdout,
+			})
+
+			// Stream chunks back to renderer
+			rl.on("line", (line: string) => {
+				console.log("[Claude CLI Output]:", line) // Debug logging
+				try {
+					const chunk = JSON.parse(line)
+
+					// Handle claude CLI stream-json format
+					if (chunk.type === "assistant" && chunk.message && chunk.message.content) {
+						// Extract text from the message content array
+						for (const content of chunk.message.content) {
+							if (content.type === "text") {
+								// Send text chunk to renderer
+								event.sender.send("claude-stream-chunk", { type: "text", text: content.text })
+							} else if (content.type === "tool_use") {
+								// Handle tool use
+								console.log("[Claude Tool Use]:", content)
+								event.sender.send("claude-stream-chunk", {
+									type: "tool_use",
+									tool: content.name,
+									input: content.input,
+								})
+							}
+						}
+					} else if (chunk.type === "result" && chunk.subtype === "success") {
+						// Final result - send done signal
+						console.log("[Claude Complete] Success")
+						event.sender.send("claude-stream-chunk", { type: "done" })
+					} else if (chunk.type === "system" && chunk.subtype === "init") {
+						// Initialization message - can log available tools
+						console.log("[Claude Init] Tools:", chunk.tools?.length || 0, "tools available")
+					} else if (chunk.type === "tool_result") {
+						console.log("[Claude Tool Result]:", chunk)
+						// Handle tool results
+						event.sender.send("claude-stream-chunk", {
+							type: "tool_result",
+							output: chunk.output,
+						})
+					}
+				} catch (e) {
+					// Not JSON, treat as text
+					console.log("[Claude Parse Error]:", e)
+					event.sender.send("claude-stream-chunk", { type: "text", text: line })
+				}
+			})
+
+			claudeProcess.stderr.on("data", (data) => {
+				stderr += data.toString()
+			})
+
+			claudeProcess.on("close", (code) => {
+				if (code !== 0) {
+					event.sender.send("claude-stream-chunk", {
+						type: "error",
+						error: `Claude CLI exited with code ${code}: ${stderr}`,
+					})
+				} else {
+					event.sender.send("claude-stream-chunk", { type: "done" })
+				}
+			})
+
+			claudeProcess.on("error", (err) => {
+				let errorMessage = `Failed to execute claude CLI: ${err.message}`
+				if (err.message.includes("ENOENT")) {
+					errorMessage = `Claude CLI not found. Please install it from https://docs.anthropic.com/en/docs/claude-code/setup`
+				}
+				event.sender.send("claude-stream-chunk", { type: "error", error: errorMessage })
+			})
+
+			// Send messages as JSON array via stdin
+			const messages = [{ role: "user", content: args.prompt }]
+			claudeProcess.stdin.write(JSON.stringify(messages))
+			claudeProcess.stdin.end()
+
+			// Return immediately to indicate streaming has started
+			return { streaming: true }
+		})
+
+		// Keep the old non-streaming version for compatibility
+		ipcMain.handle("execute-claude", async (event, args) => {
+			return new Promise((resolve, reject) => {
+				const claudePath = args.path || "claude"
+
+				// Match KiloCode's exact arguments
+				const claudeArgs = [
+					"-p",
+					"--system-prompt",
+					args.systemPrompt,
+					"--verbose",
+					"--output-format",
+					"stream-json",
+					"--max-turns",
+					"20",
+				]
+
+				if (args.model) {
+					claudeArgs.push("--model", args.model)
+				}
+
+				const claudeProcess = spawn(claudePath, claudeArgs, {
+					env: {
+						...process.env,
+						CLAUDE_CODE_MAX_OUTPUT_TOKENS: args.maxOutputTokens?.toString() || "8192",
+					},
+				})
+
+				let stdout = ""
+				let stderr = ""
+				let result = ""
+
+				const readline = require("readline")
+				const rl = readline.createInterface({
+					input: claudeProcess.stdout,
+				})
+
+				rl.on("line", (line: string) => {
+					try {
+						const chunk = JSON.parse(line)
+						if (chunk.type === "assistant" && chunk.message) {
+							for (const content of chunk.message.content) {
+								if (content.type === "text") {
+									result += content.text
+								}
+							}
+						} else if (typeof chunk === "string") {
+							result += chunk
+						}
+					} catch {
+						// Not JSON, treat as text
+						result += line
+					}
+				})
+
+				claudeProcess.stderr.on("data", (data) => {
+					stderr += data.toString()
+				})
+
+				claudeProcess.on("close", (code) => {
+					if (code !== 0) {
+						reject(new Error(`Claude CLI exited with code ${code}: ${stderr}`))
+					} else {
+						resolve(result || stdout)
+					}
+				})
+
+				claudeProcess.on("error", (err) => {
+					if (err.message.includes("ENOENT")) {
+						reject(
+							new Error(
+								`Claude CLI not found. Please install it from https://docs.anthropic.com/en/docs/claude-code/setup`,
+							),
+						)
+					} else {
+						reject(new Error(`Failed to execute claude CLI: ${err.message}`))
+					}
+				})
+
+				// Send messages as JSON array via stdin
+				const messages = [{ role: "user", content: args.prompt }]
+				claudeProcess.stdin.write(JSON.stringify(messages))
+				claudeProcess.stdin.end()
+			})
+		})
 	}
 }
 

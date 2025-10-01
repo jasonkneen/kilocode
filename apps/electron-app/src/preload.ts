@@ -69,6 +69,41 @@ contextBridge.exposeInMainWorld("electronAPI", {
 	removeAllListeners: (channel: string) => {
 		ipcRenderer.removeAllListeners(channel)
 	},
+
+	// Execute claude CLI
+	executeClaude: (args: {
+		path?: string
+		systemPrompt: string
+		prompt: string
+		model?: string
+		maxOutputTokens?: number
+	}) => ipcRenderer.invoke("execute-claude", args),
+
+	// Execute claude CLI with streaming
+	executeClaudeStream: (
+		args: {
+			path?: string
+			systemPrompt: string
+			prompt: string
+			model?: string
+			maxOutputTokens?: number
+		},
+		onChunk: (chunk: { type: string; text?: string; error?: string }) => void,
+	) => {
+		// Set up listener for stream chunks
+		const listener = (event: any, chunk: any) => {
+			onChunk(chunk)
+		}
+		ipcRenderer.on("claude-stream-chunk", listener)
+
+		// Start streaming
+		ipcRenderer.invoke("execute-claude-stream", args)
+
+		// Return cleanup function
+		return () => {
+			ipcRenderer.removeListener("claude-stream-chunk", listener)
+		}
+	},
 })
 
 // Type definitions for the exposed API
@@ -82,6 +117,23 @@ declare global {
 			showOpenDialog: (options: any) => Promise<any>
 			onNewTask: (callback: () => void) => () => void
 			removeAllListeners: (channel: string) => void
+			executeClaude: (args: {
+				path?: string
+				systemPrompt: string
+				prompt: string
+				model?: string
+				maxOutputTokens?: number
+			}) => Promise<string>
+			executeClaudeStream: (
+				args: {
+					path?: string
+					systemPrompt: string
+					prompt: string
+					model?: string
+					maxOutputTokens?: number
+				},
+				onChunk: (chunk: { type: string; text?: string; error?: string }) => void,
+			) => () => void
 		}
 	}
 }

@@ -24,6 +24,8 @@ class VSCodeAPIWrapper {
 	// Keys used for localStorage persistence in dev
 	private readonly API_CONFIG_KEY = "kilocode-apiConfiguration"
 	private readonly CURRENT_API_NAME_KEY = "kilocode-currentApiConfigName"
+	// Project handle for File System Access API
+	private projectHandle: any = null
 
 	constructor() {
 		// Check if the acquireVsCodeApi function exists in the current development
@@ -154,7 +156,7 @@ class VSCodeAPIWrapper {
 							"*",
 						)
 						break
-					case "startIndexing":
+					case "startIndexing": {
 						console.log("[Mock VSCode] Starting codebase indexing")
 						window.postMessage(
 							{
@@ -187,6 +189,7 @@ class VSCodeAPIWrapper {
 							}
 						}, 500)
 						break
+					}
 					case "requestRouterModels": {
 						// Send a correctly shaped RouterModels object
 						const routerModels = {
@@ -271,13 +274,13 @@ class VSCodeAPIWrapper {
 							)
 						}, 50)
 						break
-					case "upsertApiConfiguration":
+					case "upsertApiConfiguration": {
 						console.log("[Mock VSCode] Upsert API Configuration:", message.text)
 						// Ensure target profile exists and persist
 						this.handleUpsertApiConfiguration(message.text, message.apiConfiguration)
 						// The key insight: WelcomeView checks showWelcome state which depends on checkExistKey
 						// We need to ensure the apiConfiguration has valid keys to pass this check
-						const validApiConfig = {
+						const _validApiConfig = {
 							...message.apiConfiguration,
 							// Ensure we have the required fields that checkExistKey looks for
 							apiConfigs: message.apiConfiguration?.apiConfigs || {
@@ -321,15 +324,19 @@ class VSCodeAPIWrapper {
 							)
 						}, 100)
 						break
+					}
 					// Authentication & Cloud
 					case "rooCloudSignIn":
 					case "rooCloudSignOut":
 					case "openExternal":
 					case "remoteControlEnabled":
+						break
 					// Auto-Approve
 					case "autoApprovalEnabled":
+						break
 					// Checkpoints
 					case "checkpointRestore":
+						break
 					// Chat & Tasks (no-ops in dev; already handled above where applicable)
 					case "cancelTask":
 					case "clearTask":
@@ -339,15 +346,19 @@ class VSCodeAPIWrapper {
 					case "selectImages":
 					case "setHistoryPreviewCollapsed":
 					case "updateTodoList":
+						break
 					// Command Execution
 					case "allowedCommands":
 					case "deniedCommands":
+						break
 					// File & Open Operations
 					case "openFile":
 					case "openImage":
 					case "openMention":
+						break
 					// Indexing/Codebase
 					case "clearIndexData":
+						break
 					// MCP/Marketplace
 					case "enableMcpServerCreation":
 					case "fetchLatestMcpServersFromHub":
@@ -375,6 +386,7 @@ class VSCodeAPIWrapper {
 						break
 					case "refreshAllMcpServers":
 					case "silentlyRefreshMcpMarketplace":
+						break
 					// History/Tasks
 					case "deleteMultipleTasksWithIds":
 					case "deleteTaskWithId":
@@ -382,16 +394,20 @@ class VSCodeAPIWrapper {
 					case "exportTaskWithId":
 					case "showTaskWithId":
 					case "switchTab":
+						break
 					// Profile/Settings
 					case "fetchBalanceDataRequest":
 					case "refreshRules":
 					case "openGlobalKeybindings":
 					case "showFeedbackOptions":
 					case "fetchKilocodeNotifications":
+						break
 					// Telemetry
 					case "telemetrySetting":
+						break
 					// Terminal
 					case "terminalOperation":
+						break
 					// UI/Misc
 					case "didShowAnnouncement":
 					case "focusPanelRequest":
@@ -639,9 +655,18 @@ class VSCodeAPIWrapper {
 				else if (p.startsWith("openrouter")) normalizedProvider = "openrouter"
 			}
 			if (!normalizedProvider) {
-				if (active.openAiApiKey || active.openAiModelId || active.openAiNativeApiKey)
+				if (
+					active.apiProvider === "openai" ||
+					active.openAiApiKey ||
+					active.openAiModelId ||
+					active.openAiNativeApiKey
+				)
 					normalizedProvider = "openai"
-				else if (active.openRouterApiKey || active.openRouterModelId) normalizedProvider = "openrouter"
+				else if (active.apiProvider === "openrouter" || active.openRouterApiKey || active.openRouterModelId)
+					normalizedProvider = "openrouter"
+				else if (active.apiProvider === "claude-code") normalizedProvider = "claude-code"
+				else if (active.apiProvider === "anthropic" || active.anthropicApiKey || active.anthropicModelId)
+					normalizedProvider = "anthropic"
 				else if (active.kilocodeToken) normalizedProvider = "kilocode"
 			}
 			;(active as any)._normalizedProvider = normalizedProvider
@@ -657,6 +682,11 @@ class VSCodeAPIWrapper {
 				if (!active.openRouterApiKey) active.openRouterApiKey = active.apiKey
 				if (!active.openRouterModelId) active.openRouterModelId = active.apiModelId || active.modelId
 			}
+			// Normalize keys for Anthropic
+			if (normalizedProvider === "anthropic") {
+				if (!active.anthropicApiKey) active.anthropicApiKey = active.apiKey
+				if (!active.anthropicModelId) active.anthropicModelId = active.apiModelId || active.modelId
+			}
 			return active
 		} catch {
 			return undefined
@@ -666,7 +696,9 @@ class VSCodeAPIWrapper {
 	private async handleChatMessage(message: any) {
 		try {
 			console.log("[Mock VSCode] chat message", { type: message.type })
-		} catch {}
+		} catch {
+			// Silently ignore errors
+		}
 		const ts = Date.now()
 		// For a brand new task, the first message should be the task text
 		if (message.type === "newTask") {
@@ -710,6 +742,12 @@ class VSCodeAPIWrapper {
 		try {
 			const cfg = this.getActiveApiConfiguration() || {}
 			const provider = (cfg as any)._normalizedProvider || cfg.apiProvider || cfg.provider
+			console.log("[Mock VSCode] Provider check:", {
+				provider,
+				hasAnthropicKey: !!cfg.anthropicApiKey,
+				hasAnthropicModel: !!(cfg.anthropicModelId || cfg.apiModelId || cfg.modelId),
+				cfg,
+			})
 			let assistant = ""
 			if (provider === "openai" && cfg.openAiApiKey && (cfg.openAiModelId || cfg.apiModelId || cfg.modelId)) {
 				const model = cfg.openAiModelId || cfg.apiModelId || cfg.modelId
@@ -721,10 +759,150 @@ class VSCodeAPIWrapper {
 			) {
 				const model = cfg.openRouterModelId || cfg.apiModelId || cfg.modelId
 				assistant = await this.callOpenRouter(model, cfg.openRouterApiKey, message.text || "")
+			} else if (
+				provider === "anthropic" &&
+				cfg.anthropicApiKey &&
+				(cfg.anthropicModelId || cfg.apiModelId || cfg.modelId)
+			) {
+				const model = cfg.anthropicModelId || cfg.apiModelId || cfg.modelId
+				assistant = await this.callAnthropic(model, cfg.anthropicApiKey, message.text || "")
+			} else if (provider === "claude-code") {
+				// Check if we're in Electron with IPC available
+				if (typeof window !== "undefined" && (window as any).electronAPI?.executeClaudeStream) {
+					const model =
+						cfg.claudeCodeModelId ||
+						cfg.anthropicModelId ||
+						cfg.apiModelId ||
+						cfg.modelId ||
+						"claude-3-5-sonnet-20241022"
+					const systemPrompt = "You are a helpful coding assistant."
+
+					// Show API request started in UI
+					this.mockClineMessages.push({
+						type: "say",
+						say: "api_req_started",
+						ts: ts + 0.1,
+						text: JSON.stringify({
+							model,
+							max_tokens: cfg.claudeCodeMaxOutputTokens || 8192,
+							system: systemPrompt.substring(0, 100) + "...",
+						}),
+					} as any)
+					this.emitMockStateUpdate()
+
+					// Use streaming if available
+					try {
+						// Track streaming chunks for real-time display
+						let fullResponse = ""
+						let isStreaming = false
+
+						assistant = await new Promise((resolve, reject) => {
+							const cleanup = (window as any).electronAPI.executeClaudeStream(
+								{
+									path: cfg.claudeCodePath,
+									systemPrompt,
+									prompt: message.text || "",
+									model,
+									maxOutputTokens: cfg.claudeCodeMaxOutputTokens || 8192,
+								},
+								(chunk: any) => {
+									console.log("[Electron Stream Chunk]:", chunk)
+									if (chunk.type === "text") {
+										fullResponse += chunk.text
+										// Emit streaming update to UI
+										if (!isStreaming) {
+											isStreaming = true
+											// Clear the API request started message and start showing text
+											this.mockClineMessages = this.mockClineMessages.filter(
+												(m) => !(m.say === "api_req_started" && m.ts === ts + 0.1),
+											)
+										}
+										// Update the assistant message with streaming text
+										const existingMsg = this.mockClineMessages.find(
+											(m) => m.say === "text" && m.ts === ts + 1,
+										)
+										if (existingMsg) {
+											existingMsg.text = fullResponse
+										} else {
+											this.mockClineMessages.push({
+												type: "say",
+												say: "text",
+												ts: ts + 1,
+												text: fullResponse,
+												partial: true, // Mark as streaming
+											})
+										}
+										this.emitMockStateUpdate()
+									} else if (chunk.type === "tool_use") {
+										// Handle tool use from claude
+										fullResponse += `\n[Tool Use: ${chunk.tool}]\n`
+										console.log("[Tool Use]:", chunk.tool, chunk.input)
+									} else if (chunk.type === "tool_result") {
+										// Handle tool results
+										fullResponse += `\n[Tool Result]\n`
+										console.log("[Tool Result]:", chunk.output)
+									} else if (chunk.type === "done") {
+										cleanup()
+										// Mark streaming as complete
+										const streamMsg = this.mockClineMessages.find(
+											(m) => m.say === "text" && m.ts === ts + 1,
+										)
+										if (streamMsg) {
+											streamMsg.partial = false
+										}
+										// If no response text, provide feedback
+										if (!fullResponse.trim()) {
+											fullResponse = "Claude completed the task but provided no text response."
+										}
+										resolve(fullResponse)
+									} else if (chunk.type === "error") {
+										cleanup()
+										reject(new Error(chunk.error))
+									}
+								},
+							)
+						})
+					} catch (err: any) {
+						throw err
+					}
+				} else if (typeof window !== "undefined" && (window as any).electronAPI?.executeClaude) {
+					// Fallback to non-streaming version
+					const model =
+						cfg.claudeCodeModelId ||
+						cfg.anthropicModelId ||
+						cfg.apiModelId ||
+						cfg.modelId ||
+						"claude-3-5-sonnet-20241022"
+					const systemPrompt = "You are a helpful coding assistant."
+					try {
+						assistant = await (window as any).electronAPI.executeClaude({
+							path: cfg.claudeCodePath,
+							systemPrompt,
+							prompt: message.text || "",
+							model,
+							maxOutputTokens: cfg.claudeCodeMaxOutputTokens || 8192,
+						})
+					} catch (err: any) {
+						throw new Error(`Claude CLI error: ${err.message}`)
+					}
+				} else {
+					// Browser dev environment
+					throw new Error(
+						"Claude Code requires the VS Code extension or Electron app with claude CLI installed.",
+					)
+				}
 			} else {
-				throw new Error("Provider not configured: set OpenAI or OpenRouter with key and model in Settings")
+				throw new Error(
+					"Provider not configured: set OpenAI, OpenRouter, Anthropic, or Claude Code with key and model in Settings",
+				)
 			}
-			this.mockClineMessages.push({ type: "say", say: "text", ts: ts + 1, text: assistant })
+
+			// Only add the text message if it wasn't already added during streaming
+			const existingTextMsg = this.mockClineMessages.find((m) => m.say === "text" && m.ts === ts + 1)
+			if (!existingTextMsg) {
+				this.mockClineMessages.push({ type: "say", say: "text", ts: ts + 1, text: assistant })
+			}
+
 			// Mark request finished so spinner stops
 			this.mockClineMessages.push({
 				type: "say",
@@ -732,14 +910,9 @@ class VSCodeAPIWrapper {
 				ts: ts + 1.1,
 				text: JSON.stringify({ cost: 0 }),
 			} as any)
-			// Signal completion so UI shows standard post-reply controls
-			this.mockClineMessages.push({
-				type: "ask",
-				ask: "completion_result",
-				partial: false,
-				ts: ts + 2,
-				text: "",
-			} as any)
+			// Remove the completion_result message - we don't want "Start New Task" button
+			// Instead, just leave it in a state where the user can continue chatting
+			// The api_req_finished message is enough to stop the spinner
 			this.emitMockStateUpdate()
 		} catch (err: any) {
 			this.mockClineMessages.push({
@@ -755,14 +928,8 @@ class VSCodeAPIWrapper {
 				ts: ts + 1.1,
 				text: JSON.stringify({ cost: 0 }),
 			} as any)
-			// Allow next action immediately using standard completion state
-			this.mockClineMessages.push({
-				type: "ask",
-				ask: "completion_result",
-				partial: false,
-				ts: ts + 2,
-				text: "",
-			} as any)
+			// Remove the completion_result message - we don't want "Start New Task" button
+			// Instead, just leave it in a state where the user can continue chatting
 			this.emitMockStateUpdate()
 		}
 	}
@@ -819,6 +986,45 @@ class VSCodeAPIWrapper {
 		return data?.choices?.[0]?.message?.content || "(no content)"
 	}
 
+	private async callAnthropic(model: string, apiKey: string, prompt: string): Promise<string> {
+		const url = "https://api.anthropic.com/v1/messages"
+		const body = {
+			model,
+			max_tokens: 4096,
+			messages: [{ role: "user", content: prompt }],
+		}
+		const res = await fetch(url, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				"x-api-key": apiKey,
+				"anthropic-version": "2023-06-01",
+			},
+			body: JSON.stringify(body),
+		})
+		if (!res.ok) {
+			const text = await res.text().catch(() => "")
+			throw new Error(`Anthropic request failed: ${res.status} ${res.statusText} ${text}`)
+		}
+		const data: any = await res.json()
+		return data?.content?.[0]?.text || "(no content)"
+	}
+
+	private async persistProjectHandle(handle: any): Promise<void> {
+		// Mock implementation for persisting project handle
+		try {
+			localStorage.setItem("kilocode-project-handle", JSON.stringify(handle))
+		} catch {
+			// Silently ignore errors
+		}
+	}
+
+	private async updateWorkspaceFromProjectHandle(): Promise<void> {
+		// Mock implementation for updating workspace from project handle
+		// This would normally read files from the project handle and update the workspace
+		console.log("[Mock VSCode] Updating workspace from project handle")
+	}
+
 	// --- Dev storage helpers ---
 
 	private async handlePickWorkspaceFolder() {
@@ -831,7 +1037,9 @@ class VSCodeAPIWrapper {
 			try {
 				const q = await (dir as any).queryPermission?.({ mode: "readwrite" })
 				if (q !== "granted") await (dir as any).requestPermission?.({ mode: "readwrite" })
-			} catch {}
+			} catch {
+				// Silently ignore errors
+			}
 			this.projectHandle = dir
 			await this.persistProjectHandle(dir)
 			localStorage.setItem("kilocode-dev-cwd", dir?.name || "")
@@ -870,7 +1078,9 @@ class VSCodeAPIWrapper {
 				list.unshift(branch)
 				localStorage.setItem("kilocode-dev-git-branches", JSON.stringify(list.slice(0, 20)))
 			}
-		} catch {}
+		} catch {
+			// Silently ignore errors
+		}
 		setTimeout(() => {
 			const storedCfg = this.getStoredApiConfig()
 			const currentName = this.getCurrentConfigName()
@@ -889,7 +1099,9 @@ class VSCodeAPIWrapper {
 		try {
 			const raw = localStorage.getItem("kilocode-dev-git-branches")
 			branches = raw ? JSON.parse(raw) : []
-		} catch {}
+		} catch {
+			// Silently ignore errors
+		}
 		if (!branches || branches.length === 0) {
 			branches = ["main", "develop", "feature/example"]
 		}
@@ -965,7 +1177,9 @@ class VSCodeAPIWrapper {
 			if (currentName) {
 				localStorage.setItem(this.CURRENT_API_NAME_KEY, currentName)
 			}
-		} catch {}
+		} catch {
+			// Silently ignore errors
+		}
 	}
 
 	private getCurrentConfigName(): string {
@@ -983,13 +1197,17 @@ class VSCodeAPIWrapper {
 		return Object.values(stored.apiConfigs).map((cfg: any) => ({
 			id: cfg.id || cfg.name || "default",
 			name: cfg.name || cfg.id || "default",
-			apiProvider: cfg.apiProvider || stored.apiProvider || "kilocode",
+			apiProvider: cfg.apiProvider || stored?.apiProvider || "kilocode",
 		}))
 	}
 
 	private handleLoadApiConfiguration(name: string) {
-		const stored = this.getStoredApiConfig() || { apiConfigs: {} }
-		const exists = !!stored.apiConfigs?.[name]
+		const stored = this.getStoredApiConfig() || { currentApiConfigName: "default", apiConfigs: {} }
+		// Ensure apiConfigs exists
+		if (!stored.apiConfigs) {
+			stored.apiConfigs = {}
+		}
+		const exists = !!stored.apiConfigs[name]
 		if (!exists) {
 			// If missing, create a basic entry
 			stored.apiConfigs[name] = {
@@ -1019,7 +1237,11 @@ class VSCodeAPIWrapper {
 
 	private handleDeleteApiConfiguration(name?: string) {
 		if (!name) return
-		const stored = this.getStoredApiConfig() || { apiConfigs: {} }
+		const stored = this.getStoredApiConfig() || { currentApiConfigName: "default", apiConfigs: {} }
+		// Ensure apiConfigs exists
+		if (!stored.apiConfigs) {
+			stored.apiConfigs = {}
+		}
 		if (stored.apiConfigs[name]) {
 			delete stored.apiConfigs[name]
 			// Reset current if deleted
@@ -1043,7 +1265,11 @@ class VSCodeAPIWrapper {
 
 	private handleRenameApiConfiguration(oldName?: string, newName?: string) {
 		if (!oldName || !newName) return
-		const stored = this.getStoredApiConfig() || { apiConfigs: {} }
+		const stored = this.getStoredApiConfig() || { currentApiConfigName: "default", apiConfigs: {} }
+		// Ensure apiConfigs exists
+		if (!stored.apiConfigs) {
+			stored.apiConfigs = {}
+		}
 		const existing = stored.apiConfigs[oldName]
 		if (!existing) return
 		stored.apiConfigs[newName] = { ...existing, id: newName, name: newName }
@@ -1068,6 +1294,10 @@ class VSCodeAPIWrapper {
 	private handleUpsertApiConfiguration(name?: string, incoming?: any) {
 		const configName = name || "default"
 		const stored = this.getStoredApiConfig() || { currentApiConfigName: "default", apiConfigs: {} }
+		// Ensure apiConfigs exists
+		if (!stored.apiConfigs) {
+			stored.apiConfigs = {}
+		}
 		// Ensure target profile exists by copying from current or making a default
 		if (!stored.apiConfigs[configName]) {
 			const base = stored.apiConfigs[stored.currentApiConfigName] || {

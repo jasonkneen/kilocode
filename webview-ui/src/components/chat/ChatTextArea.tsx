@@ -28,7 +28,7 @@ import { KiloProfileSelector } from "../kilocode/chat/KiloProfileSelector"
 import { MAX_IMAGES_PER_MESSAGE } from "./ChatView"
 import ContextMenu from "./ContextMenu"
 import { ImageWarningBanner } from "./ImageWarningBanner" // kilocode_change
-import { ModelSelector } from "../kilocode/chat/ModelSelector"
+
 import {
 	VolumeX,
 	Pin,
@@ -102,7 +102,7 @@ export const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 			openedTabs,
 			currentApiConfigName,
 			listApiConfigMeta,
-			apiConfiguration,
+			apiConfiguration: _apiConfiguration,
 			customModes,
 			customModePrompts,
 			cwd,

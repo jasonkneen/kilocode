@@ -41,7 +41,7 @@
 		"format": "prettier --write \"src/**/*.{ts,tsx}\""
 	},
 	"dependencies": {
-		"@anthropic-ai/sdk": "^0.34.0",
+		"@anthropic-ai/sdk": "^0.63.0",
 		"@modelcontextprotocol/sdk": "^1.0.4",
 		"ignore": "^6.0.2",
 		"openai": "^4.74.0",

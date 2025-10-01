@@ -62,6 +62,10 @@ deps/vscode/*
 
 # Qdrant
 qdrant_storage/
+.claude/agents/
+.claude/settings/kfc-settings.json
+.claude/system-prompts/spec-workflow-starter.md
+/apps/electron-app/webview-ui/assets
 
 # allow multiple local clones with different workspaces with different colors
 # to make it easier to work on features in parallel

@@ -9,15 +9,18 @@ import { useAppTranslation } from "@src/i18n/TranslationContext"
 
 const TelemetryBanner = () => {
 	const { t } = useAppTranslation()
-	const [hasChosen, setHasChosen] = useState(false)
+	const [_hasChosen, setHasChosen] = useState(false)
+	const [isDismissed, setIsDismissed] = useState(() => {
+		return localStorage.getItem("kilocode-telemetryBannerDismissed") === "true"
+	})
 
-	const handleAllow = () => {
+	const _handleAllow = () => {
 		setHasChosen(true)
 		localStorage.setItem("kilocode-telemetryConsent", "enabled")
 		vscode.postMessage({ type: "telemetrySetting", text: "enabled" satisfies TelemetrySetting })
 	}
 
-	const handleDeny = () => {
+	const _handleDeny = () => {
 		setHasChosen(true)
 		vscode.postMessage({ type: "telemetrySetting", text: "disabled" satisfies TelemetrySetting })
 	}
@@ -28,6 +31,11 @@ const TelemetryBanner = () => {
 			action: "settingsButtonClicked",
 			values: { section: "about" },
 		})
+	}
+
+	const handleClose = () => {
+		setIsDismissed(true)
+		localStorage.setItem("kilocode-telemetryBannerDismissed", "true")
 	}
 
 	if (isDismissed) {

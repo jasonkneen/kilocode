@@ -16,11 +16,26 @@
 		"clean": "rimraf dist build"
 	},
 	"dependencies": {
-		"electron": "^32.2.0"
+		"@anthropic-ai/sdk": "^0.51.0",
+		"@modelcontextprotocol/sdk": "1.12.0",
+		"@roo-code/types": "file:../../packages/types",
+		"axios": "^1.7.4",
+		"diff": "^5.2.0",
+		"delay": "^6.0.0",
+		"ignore": "^7.0.3",
+		"node-ipc": "^12.0.0",
+		"openai": "^5.12.2",
+		"p-limit": "^6.2.0",
+		"cheerio": "^1.0.0",
+		"pdf-parse": "^1.1.1",
+		"mammoth": "^1.9.1",
+		"exceljs": "^4.4.0",
+		"fast-xml-parser": "^5.0.0"
 	},
 	"devDependencies": {
 		"@types/node": "^20.19.0",
 		"concurrently": "^9.2.1",
+		"electron": "^38.1.2",
 		"electron-builder": "^25.1.7",
 		"rimraf": "^6.0.1",
 		"typescript": "^5.4.5"

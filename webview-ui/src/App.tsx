@@ -303,7 +303,24 @@ const App = () => {
 						left: 0,
 						right: 0,
 						zIndex: 1000,
-					}}>
+						cursor: "grab",
+						userSelect: "none",
+						WebkitUserSelect: "none",
+						...(typeof window !== "undefined" && window.location.hostname === "localhost"
+							? { WebkitAppRegion: "drag" as any }
+							: {}),
+					}}
+					onMouseDown={(e) => {
+						// Only allow dragging from the background area, not buttons
+						if (e.target === e.currentTarget) {
+							e.preventDefault()
+							// Send message to electron main process to start window drag
+							if (typeof window !== "undefined" && (window as any).electronAPI?.startWindowDrag) {
+								;(window as any).electronAPI.startWindowDrag()
+							}
+						}
+					}}
+					title="Click and drag to move window">
 					<button
 						onClick={() => {
 							console.log("Switching to chat")
@@ -434,7 +451,7 @@ const App = () => {
 				<div style={{ height: 56 }} />
 			)}
 			{tab === "modes" && <ModesView onDone={() => switchTab("marketplace")} />}
-			{tab === "mcp" && <McpView onDone={() => switchTab("marketplace")} />}
+			{tab === "mcp" && <McpView />}
 			{tab === "history" && <HistoryView onDone={() => switchTab("marketplace")} />}
 			{tab === "settings" && (
 				<SettingsView
@@ -445,13 +462,7 @@ const App = () => {
 			)}
 			{/* kilocode_change: add profileview */}
 			{tab === "profile" && <ProfileView onDone={() => switchTab("marketplace")} />}
-			{tab === "marketplace" && (
-				<MarketplaceView
-					stateManager={marketplaceStateManager}
-					onDone={() => switchTab("marketplace")}
-					targetTab="mode"
-				/>
-			)}
+			{tab === "marketplace" && <MarketplaceView stateManager={marketplaceStateManager} targetTab="mode" />}
 			{/* kilocode_change: no cloud view */}
 			{/* {tab === "cloud" && (
 				<CloudView

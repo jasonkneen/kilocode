@@ -128,7 +128,7 @@ export class MockVSCodeStorage {
 		return copy
 	}
 
-	private handleWebviewDidLaunch(payload: any): void {
+	private handleWebviewDidLaunch(_payload: any): void {
 		console.log("[Mock VSCode] Webview launched - sending initial state")
 
 		// Build a simple default active profile and profiles map
@@ -279,7 +279,9 @@ export class MockVSCodeStorage {
 				JSON.stringify(this.normalizeApiConfiguration(activeProfile)),
 			)
 			localStorage.setItem("kilocode-currentApiConfigName", String(profiles.currentApiConfigName || "default"))
-		} catch {}
+		} catch {
+			// Silently ignore localStorage errors
+		}
 
 		// Also send any installed MCP servers persisted locally
 		setTimeout(() => {
@@ -412,7 +414,7 @@ export class MockVSCodeStorage {
 		}, 80)
 	}
 
-	private handleFetchMarketplaceData(payload: any): void {
+	private handleFetchMarketplaceData(_payload: any): void {
 		console.log("[Mock VSCode] Fetching marketplace data")
 
 		// Mock marketplace data response
@@ -451,13 +453,13 @@ export class MockVSCodeStorage {
 		}, 100)
 	}
 
-	private handleCodeIndexSecretStatus(payload: any): void {
+	private handleCodeIndexSecretStatus(_payload: any): void {
 		setTimeout(() => {
 			window.postMessage({ type: "codeIndexSecretStatus", status: "available" }, "*")
 		}, 10)
 	}
 
-	private handleIndexingStatus(payload: any): void {
+	private handleIndexingStatus(_payload: any): void {
 		setTimeout(() => {
 			window.postMessage({ type: "indexingStatus", isIndexing: false, progress: 0 }, "*")
 		}, 10)
@@ -545,7 +547,9 @@ export class MockVSCodeStorage {
 			localStorage.setItem(this.PROFILES_KEY, JSON.stringify(profiles))
 			localStorage.setItem("kilocode-apiConfiguration", JSON.stringify(this.normalizeApiConfiguration(active)))
 			localStorage.setItem("kilocode-currentApiConfigName", name)
-		} catch {}
+		} catch {
+			// Silently ignore localStorage errors
+		}
 		const list = this.buildListFromProfiles(profiles)
 		setTimeout(() => {
 			window.postMessage({ type: "listApiConfig", listApiConfig: list }, "*")
@@ -577,7 +581,9 @@ export class MockVSCodeStorage {
 		}
 		try {
 			localStorage.setItem(this.PROFILES_KEY, JSON.stringify(stored))
-		} catch {}
+		} catch {
+			// Silently ignore localStorage errors
+		}
 		const list = this.buildListFromProfiles(stored)
 		const active = this.normalizeApiConfiguration(stored.apiConfigs[stored.currentApiConfigName])
 		if (active) {
@@ -587,7 +593,9 @@ export class MockVSCodeStorage {
 					JSON.stringify(this.normalizeApiConfiguration(active)),
 				)
 				localStorage.setItem("kilocode-currentApiConfigName", stored.currentApiConfigName)
-			} catch {}
+			} catch {
+				// Silently ignore localStorage errors
+			}
 		}
 		setTimeout(() => {
 			window.postMessage({ type: "listApiConfig", listApiConfig: list }, "*")
@@ -620,7 +628,9 @@ export class MockVSCodeStorage {
 					"kilocode-apiConfiguration",
 					JSON.stringify(this.normalizeApiConfiguration(active)),
 				)
-		} catch {}
+		} catch {
+			// Silently ignore localStorage errors
+		}
 		const list = this.buildListFromProfiles(stored)
 		setTimeout(() => {
 			window.postMessage({ type: "listApiConfig", listApiConfig: list }, "*")
