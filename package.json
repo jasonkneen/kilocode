@@ -39,7 +39,10 @@
 		"electron:build": "pnpm --filter @kilocode/electron-app build",
 		"electron:start": "node apps/electron-app/launch.js",
 		"electron:dev": "pnpm --filter @kilocode/electron-app dev",
-		"electron:dist": "pnpm --filter @kilocode/electron-app dist"
+		"electron:dist": "pnpm --filter @kilocode/electron-app dist",
+		"tauri:install": "pnpm --filter @kilocode/tauri-app install",
+		"tauri:dev": "pnpm --filter @kilocode/tauri-app dev",
+		"tauri:build": "pnpm --filter @kilocode/tauri-app build"
 	},
 	"devDependencies": {
 		"@changesets/changelog-github": "^0.5.1",

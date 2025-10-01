@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Kilo Code</title>
+
+		<!-- Tauri VS Code API Shim -->
+		<script>
+			// Provide a minimal acquireVsCodeApi shim for Tauri
+			window.acquireVsCodeApi = () => {
+				const state = {}
+
+				return {
+					postMessage: (message) => {
+						// Forward to Tauri backend
+						if (window.__TAURI__) {
+							window.__TAURI__
+								.invoke("handle_vscode_message", { message })
+								.catch((err) => console.error("Tauri message error:", err))
+						} else {
+							console.log("[Tauri Shim] postMessage:", message)
+						}
+					},
+					setState: (newState) => {
+						Object.assign(state, newState)
+						try {
+							localStorage.setItem("vscodeState", JSON.stringify(state))
+						} catch (e) {
+							console.error("Failed to save state:", e)
+						}
+					},
+					getState: () => {
+						try {
+							const stored = localStorage.getItem("vscodeState")
+							return stored ? JSON.parse(stored) : state
+						} catch (e) {
+							return state
+						}
+					},
+				}
+			}
+
+			// Add dark theme class
+			document.addEventListener("DOMContentLoaded", () => {
+				document.body.classList.add("vscode-dark")
+				document.body.setAttribute("data-vscode-theme-kind", "vscode-dark")
+			})
+		</script>
+	</head>
+	<body>
+		<div id="root"></div>
+	</body>
+</html>

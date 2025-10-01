@@ -1,0 +1,22 @@
+{
+	"name": "@kilocode/tauri-app",
+	"version": "1.0.0",
+	"description": "Tauri wrapper for Kilo Code webview-ui",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "tauri dev",
+		"build": "npm run build:frontend && tauri build",
+		"build:frontend": "cd ../../webview-ui && pnpm build && cd - && node build-frontend.cjs",
+		"tauri": "tauri",
+		"clean": "rimraf dist build src-tauri/target"
+	},
+	"devDependencies": {
+		"@tauri-apps/cli": "^2.1.0",
+		"rimraf": "^6.0.1"
+	},
+	"dependencies": {
+		"@tauri-apps/api": "^2.1.1",
+		"@tauri-apps/plugin-shell": "^2.0.2"
+	}
+}

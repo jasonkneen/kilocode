@@ -1,0 +1,16 @@
+{
+	"extends": ["//"],
+	"tasks": {
+		"dev": {
+			"cache": false,
+			"persistent": true
+		},
+		"build": {
+			"outputs": ["src-tauri/target/release/bundle/**"],
+			"inputs": ["src-tauri/**", "package.json"]
+		},
+		"clean": {
+			"cache": false
+		}
+	}
+}
