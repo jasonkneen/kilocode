@@ -120,7 +120,7 @@ importers:
         version: file:packages/types
       axios:
         specifier: ^1.7.4
-        version: 1.9.0
+        version: 1.12.2
       cheerio:
         specifier: ^1.0.0
         version: 1.0.0
@@ -3044,10 +3044,6 @@ packages:
 
   '@babel/runtime@7.27.4':
     resolution: {integrity: sha512-t3yaEOuGu9NlIZ+hIeGbBjFtZT7j2cb2tg0fuaJKeGotchRjjLfrBA9Kwf8quhpP1EUuxModQg04q/mBwyg8uA==}
-    engines: {node: '>=6.9.0'}
-
-  '@babel/runtime@7.28.3':
-    resolution: {integrity: sha512-9uIQ10o0WGdpP6GDhXcdOJPJuDgFtIDtN/9+ArJQ2NAfAmiuhTQdzkaTGR33v43GYS2UrSA0eX2pPPHoFVvpxA==}
     engines: {node: '>=6.9.0'}
 
   '@babel/runtime@7.28.4':
@@ -20496,8 +20492,6 @@ snapshots:
   '@babel/runtime@7.27.1': {}
 
   '@babel/runtime@7.27.4': {}
-
-  '@babel/runtime@7.28.3': {}
 
   '@babel/runtime@7.28.4': {}
 

@@ -53,3 +53,6 @@ function parseThemeFromUrl(): ThemeKind | undefined {
 		}
 	}
 })()
+
+// Export to make this a module
+export {}

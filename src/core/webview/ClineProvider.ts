@@ -1924,6 +1924,9 @@ export class ClineProvider
 		const mergedDeniedCommands = this.mergeDeniedCommands(deniedCommands)
 		const cwd = this.cwd
 
+		// kilocode_change: Fetch taskHistory separately
+		const taskHistory = this.getGlobalState("taskHistory") ?? []
+
 		// Check if there's a system prompt override for the current mode
 		const currentMode = mode ?? defaultModeSlug
 		const hasSystemPromptOverride = await this.hasFileBasedSystemPromptOverride(currentMode)

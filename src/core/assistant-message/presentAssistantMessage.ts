@@ -171,6 +171,8 @@ export async function presentAssistantMessage(cline: Task, recursionDepth: numbe
 						} else {
 							return getReadFileToolDescription(block.name, block.params)
 						}
+					case "simple_read_file":
+						return `[${block.name} for '${block.params.path}']`
 					case "fetch_instructions":
 						return `[${block.name} for '${block.params.task}']`
 					case "write_to_file":
@@ -244,6 +246,8 @@ export async function presentAssistantMessage(cline: Task, recursionDepth: numbe
 						return `[${block.name} for '${block.params.command}'${block.params.args ? ` with args: ${block.params.args}` : ""}]`
 					case "generate_image":
 						return `[${block.name} for '${block.params.path}']`
+					default:
+						return `[${block.name}]`
 				}
 			}
 

@@ -2,15 +2,15 @@ import * as path from "path"
 import fs from "fs/promises"
 
 import NodeCache from "node-cache"
-import { safeWriteJson } from "../../../utils/safeWriteJson.ts"
+import { safeWriteJson } from "../../../utils/safeWriteJson.js"
 import sanitize from "sanitize-filename"
 
-import { ContextProxy } from "../../../core/config/ContextProxy.ts"
-import { getCacheDirectoryPath } from "../../../utils/storage.ts"
-import { RouterName, ModelRecord } from "../../../shared/api.ts"
-import { fileExistsAtPath } from "../../../utils/fs.ts"
+import { ContextProxy } from "../../../core/config/ContextProxy.js"
+import { getCacheDirectoryPath } from "../../../utils/storage.js"
+import { RouterName, ModelRecord } from "../../../shared/api.js"
+import { fileExistsAtPath } from "../../../utils/fs.js"
 
-import { getOpenRouterModelEndpoints } from "./openrouter.ts"
+import { getOpenRouterModelEndpoints } from "./openrouter.js"
 
 const memoryCache = new NodeCache({ stdTTL: 5 * 60, checkperiod: 5 * 60 })
 
